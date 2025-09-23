@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 
 const EtiquetasInput = ({ etiquetas, setEtiquetas }) => {
-  const [inputValue, setInputValue] = useState('');
+  const [nuevaEtiqueta, setNuevaEtiqueta] = useState('');
 
   const agregarEtiqueta = () => {
-    if (inputValue.trim() && !etiquetas.includes(inputValue.trim())) {
-      setEtiquetas([...etiquetas, inputValue.trim()]);
-      setInputValue('');
+    if (nuevaEtiqueta.trim() && !etiquetas.includes(nuevaEtiqueta.trim())) {
+      setEtiquetas([...etiquetas, nuevaEtiqueta.trim()]);
+      setNuevaEtiqueta('');
     }
   };
 
@@ -22,27 +22,43 @@ const EtiquetasInput = ({ etiquetas, setEtiquetas }) => {
   };
 
   return (
-    <div className="etiquetas-input-container">
-      {/* Input para nueva etiqueta */}
+    <div className="etiquetas-container">
+      {/* Input para agregar etiquetas */}
       <div className="etiqueta-input-group">
         <input 
           type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          value={nuevaEtiqueta}
+          onChange={(e) => setNuevaEtiqueta(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Escribe una etiqueta..."
+          className="etiqueta-input"
         />
-        <button type="button" onClick={agregarEtiqueta}>+</button>
+        <button 
+          type="button" 
+          onClick={agregarEtiqueta}
+          className="btn-agregar-etiqueta"
+        >
+          +
+        </button>
       </div>
 
-      {/* Lista de etiquetas */}
+      {/* Lista de etiquetas existentes */}
       <div className="etiquetas-list">
         {etiquetas.map((etiqueta, index) => (
-          <span key={index} className="etiqueta-tag">
-            {etiqueta}
-            <button onClick={() => eliminarEtiqueta(index)}>×</button>
-          </span>
+          <div key={index} className="etiqueta-item">
+            <span className="etiqueta-text">- {etiqueta}</span>
+            <button 
+              onClick={() => eliminarEtiqueta(index)}
+              className="btn-eliminar-etiqueta"
+            >
+              ×
+            </button>
+          </div>
         ))}
+        
+        {etiquetas.length === 0 && (
+          <div className="etiqueta-vacia">- ETIQUETAS</div>
+        )}
       </div>
     </div>
   );

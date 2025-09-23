@@ -1,11 +1,11 @@
 import React from 'react';
 import './App.css';
-import GestionImagenes from './pages/GestionImagenes';
+import NuevaImagen from './pages/NuevaImagen';
 
 function App() {
   return (
     <div className="App">
-      <GestionImagenes />
+      <NuevaImagen />
     </div>
   );
 }
