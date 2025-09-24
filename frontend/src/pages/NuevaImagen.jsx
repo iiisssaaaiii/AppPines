@@ -1,17 +1,31 @@
-import React, { useState, useRef } from 'react';
-import '../styles/GestionImagenes.css';
-import HeaderNavigation from '../components/gestion-imagenes/HeaderNavigation';
-import EtiquetasInput from '../components/gestion-imagenes/EtiquetasInput';
+// src/pages/NuevaImagen.jsx
+import React, { useState, useRef } from "react";
 
 const NuevaImagen = () => {
-  const [nombre, setNombre] = useState('');
+  const [nombre, setNombre] = useState("");
   const [etiquetas, setEtiquetas] = useState([]);
+  const [nuevaEtiqueta, setNuevaEtiqueta] = useState("");
+  const [imagen, setImagen] = useState(null);
   const [imagenPreview, setImagenPreview] = useState(null);
   const fileInputRef = useRef(null);
+
+  const agregarEtiqueta = () => {
+    if (nuevaEtiqueta.trim() !== "") {
+      setEtiquetas([...etiquetas, nuevaEtiqueta.trim()]);
+      setNuevaEtiqueta("");
+    }
+  };
+
+  const eliminarEtiqueta = (index) => {
+    setEtiquetas(etiquetas.filter((_, i) => i !== index));
+  };
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
+      setImagen(file);
+      
+      // Crear preview de la imagen
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagenPreview(e.target.result);
@@ -20,98 +34,208 @@ const NuevaImagen = () => {
     }
   };
 
-  const handleSubirFoto = () => {
+  const handleUploadClick = () => {
     fileInputRef.current.click();
   };
 
-  const handleAgregar = () => {
-    if (nombre && imagenPreview) {
-      alert(`Imagen "${nombre}" agregada con etiquetas: ${etiquetas.join(', ')}`);
-      // Aquí luego conectaremos con la base de datos
-      setNombre('');
-      setEtiquetas([]);
-      setImagenPreview(null);
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setImagen(file);
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagenPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleCancelar = () => {
-    setNombre('');
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!imagen) {
+      alert("Por favor, selecciona una imagen");
+      return;
+    }
+
+    // Aquí iría la lógica para subir la imagen
+    const formData = new FormData();
+    formData.append('imagen', imagen);
+    formData.append('nombre', nombre);
+    formData.append('etiquetas', JSON.stringify(etiquetas));
+
+    console.log("Datos a enviar:", {
+      nombre,
+      etiquetas,
+      imagen: imagen.name
+    });
+
+    // Simular envío
+    alert(`Imagen "${nombre}" preparada para subir con ${etiquetas.length} etiquetas`);
+  };
+
+  const handleCancel = () => {
+    setNombre("");
     setEtiquetas([]);
+    setImagen(null);
     setImagenPreview(null);
   };
 
   return (
     <div className="nueva-imagen-container">
-      {/* Header con navegación */}
-      <HeaderNavigation activo="gestion-imagenes" />
+      <div className="page-header">
+        <h1>Tienda de Pines</h1>
+        <p>Gestión de imágenes</p>
+      </div>
 
-      {/* Contenido principal - EXACTAMENTE como en la imagen */}
-      <main className="nueva-imagen-main">
-        <div className="form-container">
-          {/* Título */}
-          <h1 className="form-title">NUEVA IMAGEN</h1>
-
-          {/* Campo Nombre */}
+      <h2>NUEVA IMAGEN</h2>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="form-section">
           <div className="form-group">
-            <label className="form-label">NOMBRE</label>
-            <input 
-              type="text" 
-              className="form-input"
+            <label htmlFor="nombre">NOMBRE</label>
+            <input
+              type="text"
+              id="nombre"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ingresa el nombre del diseño"
+              placeholder="Ingresa el nombre de la imagen"
+              required
             />
           </div>
 
-          {/* Campo Etiquetas */}
-          <div className="form-group">
-            <label className="form-label">AGREGAR ETIQUETAS</label>
-            <EtiquetasInput 
-              etiquetas={etiquetas}
-              setEtiquetas={setEtiquetas}
-            />
-          </div>
-
-          {/* Botones Cancelar y Agregar */}
-          <div className="form-actions">
-            <button className="btn-cancelar" onClick={handleCancelar}>
-              CANCELAR
-            </button>
-            <button 
-              className="btn-agregar" 
-              onClick={handleAgregar}
-              disabled={!nombre || !imagenPreview}
-            >
-              AGREGAR
-            </button>
-          </div>
-
-          {/* Separador */}
-          <div className="separator"></div>
-
-          {/* Botón Subir Foto */}
-          <div className="upload-section">
-            <button className="btn-subir-foto" onClick={handleSubirFoto}>
-              Subir foto
-            </button>
-            <input 
-              type="file" 
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              accept="image/*"
-              style={{ display: 'none' }}
-            />
-            
-            {/* Vista Previa de la imagen */}
-            {imagenPreview && (
-              <div className="image-preview-large">
-                <img src={imagenPreview} alt="Vista previa" />
-                <p>Vista previa de la imagen</p>
+          <div className="etiquetas-section">
+            <div className="etiquetas-header">
+              <span>AGREGAR ETIQUETAS</span>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={nuevaEtiqueta}
+                  onChange={(e) => setNuevaEtiqueta(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), agregarEtiqueta())}
+                  placeholder="Nueva etiqueta"
+                  style={{ padding: '0.5rem', border: '1px solid #bdc3c7', borderRadius: '4px' }}
+                />
+                <button type="button" onClick={agregarEtiqueta} className="btn btn-primary">
+                  Agregar
+                </button>
               </div>
-            )}
+            </div>
+            
+            <table className="etiquetas-table">
+              <thead>
+                <tr>
+                  <th>- ETIQUETAS</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {etiquetas.map((etiqueta, index) => (
+                  <tr key={index}>
+                    <td>{etiqueta}</td>
+                    <td>
+                      <button 
+                        type="button" 
+                        onClick={() => eliminarEtiqueta(index)}
+                        className="btn btn-cancel"
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {etiquetas.length === 0 && (
+                  <tr>
+                    <td colSpan="2" style={{ textAlign: 'center', color: '#7f8c8d' }}>
+                      No hay etiquetas agregadas
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      </main>
+
+        {/* Sección de carga de imagen */}
+        <div 
+          className="upload-section"
+          onClick={handleUploadClick}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          style={{ cursor: 'pointer' }}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="image/*"
+            style={{ display: 'none' }}
+          />
+          
+          {imagenPreview ? (
+            <div>
+              <img 
+                src={imagenPreview} 
+                alt="Vista previa" 
+                style={{ 
+                  maxWidth: '200px', 
+                  maxHeight: '200px',
+                  marginBottom: '1rem',
+                  border: '2px solid #3498db',
+                  borderRadius: '4px'
+                }} 
+              />
+              <p>Imagen seleccionada: {imagen.name}</p>
+              <p style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>
+                Haz clic para cambiar de imagen o arrastra una nueva
+              </p>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📷</div>
+              <div className="upload-text">
+                <p>Haz clic para seleccionar una imagen</p>
+                <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                  o arrastra y suelta una imagen aquí
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Información de la imagen seleccionada */}
+        {imagen && (
+          <div style={{ 
+            marginTop: '1rem', 
+            padding: '1rem', 
+            backgroundColor: '#ecf0f1', 
+            borderRadius: '4px',
+            textAlign: 'left'
+          }}>
+            <h4>Información de la imagen:</h4>
+            <p><strong>Nombre:</strong> {imagen.name}</p>
+            <p><strong>Tamaño:</strong> {(imagen.size / 1024 / 1024).toFixed(2)} MB</p>
+            <p><strong>Tipo:</strong> {imagen.type}</p>
+          </div>
+        )}
+
+        {/* BOTONES MOVIDOS HASTA ABAJO - después de la imagen */}
+        <div className="button-group" style={{ marginTop: '2rem' }}>
+          <button type="button" onClick={handleCancel} className="btn btn-cancel">
+            CANCELAR
+          </button>
+          <button type="submit" className="btn btn-primary">
+            AGREGAR
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

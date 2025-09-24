@@ -1,0 +1,48 @@
+/* NuevaImagen específico */
+.titulo-seccion {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* Grid con 2 columnas */
+.form-grid {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Columna izquierda (inputs) */
+.col-izquierda {
+  flex: 1;
+  max-width: 400px;
+}
+
+/* Columna derecha (imagen) */
+.col-derecha {
+  flex: 1;
+  max-width: 300px;
+  text-align: center;
+}
+
+/* Placeholder del preview */
+.placeholder {
+  width: 200px;
+  height: 200px;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  background: repeating-conic-gradient(#eee 0% 25%, transparent 0% 50%) 
+              50% / 20px 20px;
+  margin: 0 auto 10px;
+}
+
+/* Ajuste del preview */
+.vista-previa img {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid #ccc;
+}
