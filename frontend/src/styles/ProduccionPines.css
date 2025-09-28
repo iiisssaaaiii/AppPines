@@ -1,0 +1,163 @@
+.produccion-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.titulo {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.subtitulo {
+  margin: 20px 0;
+  font-weight: bold;
+}
+
+.botones-tamanos {
+  margin-bottom: 15px;
+}
+
+.btn-tamano,
+.btn-cargar {
+  margin: 5px;
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-tamano {
+  background: linear-gradient(to right, #7a5af8, #5d4ae6);
+  color: white;
+}
+
+.btn-cargar {
+  background: #333;
+  color: white;
+}
+
+.grid-pines {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  justify-items: center;
+  margin: 20px auto;
+  padding: 20px;
+  border: 2px solid #0077ff;
+  border-radius: 10px;
+  max-width: 600px;
+}
+
+.pin-slot {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pin-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.btn-add {
+  font-size: 2rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.btn-remove {
+  position: absolute;
+  top: 2px;
+  right: 5px;
+  background: red;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.acciones {
+  margin-top: 20px;
+}
+
+.btn-limpiar {
+  background: #9c27b0;
+  color: white;
+  padding: 8px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-imprimir {
+  background: #1e88e5;
+  color: white;
+  padding: 8px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 250px;
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+}
+
+.modal-content button {
+  margin: 5px;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-editar {
+  background: #4caf50;
+  color: white;
+}
+
+.btn-eliminar {
+  background: #e53935;
+  color: white;
+}
+
+.btn-cancelar {
+  background: #9e9e9e;
+  color: white;
+}
+

@@ -3,15 +3,8 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import NuevaImagen from "./pages/NuevaImagen";
+import ProduccionPines from "./pages/ProduccionPines"; // ✅ Importar página real
 import Navbar from "./components/Navbar";
-
-// Páginas básicas
-const ProduccionPines = () => (
-  <div className="modulo-page">
-    <h1>🏭 Producción de Pines</h1>
-    <p>Módulo en desarrollo - Próximamente</p>
-  </div>
-);
 
 const InventarioPines = () => (
   <div className="modulo-page">
@@ -52,7 +45,7 @@ function App() {
         <main className="App-main p-6">
           <Routes>
             <Route path="/" element={<NuevaImagen />} />
-            <Route path="/produccion" element={<ProduccionPines />} />
+            <Route path="/produccion" element={<ProduccionPines />} /> {/* ✅ */}
             <Route path="/inventario" element={<InventarioPines />} />
             <Route path="/ventas" element={<Ventas />} />
             <Route path="/reportes" element={<Reportes />} />

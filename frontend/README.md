@@ -1,3 +1,192 @@
+# MANUAL PARA QUE EL PROYECTO CORRA EN TU COMPU
+# 📌 PinesApp – Backend + Base de Datos + Frontend
+
+Este proyecto permite **crear, gestionar e imprimir pines** 🎨, con control de inventario y consumo de materia prima.
+
+---
+
+## ⚡ Requisitos
+
+Antes de comenzar, asegúrate de tener instalado:
+
+- [Node.js](https://nodejs.org/) (v18 o superior)  
+  ```bash
+  node -v
+  npm -v
+  ```
+- [MySQL Server 8](https://dev.mysql.com/downloads/installer/)  
+  - Usuario: `root`  
+  - Contraseña: definida en tu instalación  
+- Git (opcional, para clonar el repo)  
+
+---
+
+## 📥 Instalación del Proyecto
+
+### 1️⃣ Clonar o descargar el proyecto
+```bash
+git clone https://github.com/tu-repo/PinesApp.git
+```
+
+O descarga el ZIP y descomprímelo en tu PC.
+
+---
+
+### 2️⃣ Crear la Base de Datos
+
+El archivo SQL ya está en:  
+```
+backend/database/PinesDB.sql
+```
+
+Ejecuta en Windows (ajusta la ruta si es distinta):
+
+```bash
+"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p < "C:\Users\TU_USUARIO\Desktop\PinesApp\backend\database\PinesDB.sql"
+```
+
+👉 Esto creará la base `PinesDB` con todas las tablas necesarias.
+
+---
+
+### 3️⃣ Verificar la Base
+
+Entra a MySQL:
+
+```bash
+"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p
+```
+
+Dentro de MySQL:
+
+```sql
+SHOW DATABASES;
+USE PinesDB;
+SHOW TABLES;
+SELECT * FROM usuarios;
+```
+
+---
+
+### 4️⃣ Configurar el Backend
+
+Ve a la carpeta `backend`:
+
+```bash
+cd PinesApp/backend
+```
+
+Instala dependencias:
+
+```bash
+npm install
+```
+
+Edita el archivo `backend/config/db.js` y pon tu contraseña MySQL:
+
+```js
+const db = mysql.createPool({
+  host: "localhost",
+  user: "root",
+  password: "TU_CONTRASEÑA",
+  database: "PinesDB"
+});
+```
+
+---
+
+### 5️⃣ Levantar el Backend
+
+Para producción:
+```bash
+npm start
+```
+
+Para desarrollo (se reinicia solo con cambios):
+```bash
+npm run dev
+```
+
+Servidor disponible en:
+```
+http://localhost:4000
+```
+
+---
+
+### 6️⃣ Endpoints de prueba
+
+- Bienvenida → [http://localhost:4000/](http://localhost:4000/)  
+- Usuarios → [http://localhost:4000/api/testdb/usuarios](http://localhost:4000/api/testdb/usuarios)  
+- Inventario → [http://localhost:4000/api/inventario](http://localhost:4000/api/inventario)  
+- Producción (POST en Postman):  
+  ```
+  http://localhost:4000/api/produccion
+  ```
+  Body JSON:
+  ```json
+  {
+    "url_imagen": "http://localhost/uploads/spiderman.png",
+    "etiquetas": "superheroes",
+    "tamano": "grande",
+    "cantidad": 12,
+    "id_usuario": 1
+  }
+  ```
+
+---
+
+### 7️⃣ Frontend
+
+Ve a la carpeta `frontend`:
+
+```bash
+cd ../frontend
+```
+
+Instala dependencias:
+```bash
+npm install
+```
+
+Instala axios (si no está):
+```bash
+npm install axios
+```
+
+Levanta el frontend:
+```bash
+npm start
+```
+
+Disponible en:
+```
+http://localhost:3000
+```
+
+---
+
+## 🔄 Flujo del sistema
+
+```mermaid
+graph TD;
+    Usuario-->Frontend[React Frontend];
+    Frontend-->Backend[Express Backend];
+    Backend-->BD[(MySQL PinesDB)];
+    BD-- Datos de usuarios, inventario, pines -->Backend;
+    Backend-- JSON -->Frontend;
+```
+
+---
+
+## 🎉 ¡Listo!
+- Backend corriendo en → `http://localhost:4000`  
+- Frontend corriendo en → `http://localhost:3000`  
+- Base de datos lista con tablas y datos iniciales ✅  
+
+
+### ==============================================================================================
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
