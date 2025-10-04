@@ -1,58 +1,59 @@
+// src/pages/ProduccionPines.jsx
 import React, { useState, useRef } from "react";
 import PinSlot from "../components/pines/PinSlot";
 import ImageOptionsModal from "../components/pines/ImageOptionsModal";
+import { imprimirPines, subirImagen } from "../services/produccionService"; // 👈 importar ambos servicios
 import "../styles/ProduccionPines.css";
 
 const ProduccionPines = () => {
   const [pines, setPines] = useState(Array(12).fill(null));
+  const [tamano, setTamano] = useState("pequeno");
   const fileInputRef = useRef(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleAddImage = (index, imageUrl) => {
-    const nuevosPines = [...pines];
-    nuevosPines[index] = imageUrl;
-    setPines(nuevosPines);
-  };
+  // Subir archivo y obtener la URL del backend
+  const handleFileUpload = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("imagen", file);
 
-  const handleRemoveImage = (index) => {
-    const nuevosPines = [...pines];
-    nuevosPines[index] = null;
-    setPines(nuevosPines);
-    setIsModalOpen(false);
-  };
+      const response = await subirImagen(formData); // 👈 nuevo servicio
+      const urlSubida = response.url; // ej: http://localhost:4000/uploads/imagen.png
 
-  const handleClear = () => {
-    setPines(Array(12).fill(null));
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Llenar solo los slots vacíos con la imagen cargada
-  const handleFileChange = (e, indexToReplace = null) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (indexToReplace !== null) {
-          handleAddImage(indexToReplace, reader.result); // Reemplaza uno
-        } else {
-          // Cargar en los vacíos
-          const nuevaImagen = reader.result;
-          const nuevosPines = pines.map((pin) => (pin ? pin : nuevaImagen));
-          setPines(nuevosPines);
-        }
-        setIsModalOpen(false);
-      };
-      reader.readAsDataURL(file);
+      // Reemplazar slots vacíos con la URL de la imagen subida
+      const nuevosPines = pines.map((pin) => (pin ? pin : urlSubida));
+      setPines(nuevosPines);
+    } catch (error) {
+      console.error("Error subiendo imagen:", error);
+      alert("❌ No se pudo subir la imagen");
     }
   };
 
-  const openModal = (index) => {
-    setSelectedIndex(index);
-    setIsModalOpen(true);
+  const handlePrint = async () => {
+    const cantidad = pines.filter((p) => p !== null).length;
+
+    if (cantidad === 0) {
+      alert("❌ Debes cargar al menos una imagen");
+      return;
+    }
+
+    try {
+      const url_imagen = pines.find((p) => p !== null);
+
+      const result = await imprimirPines({
+        url_imagen,
+        etiquetas: "default",
+        tamano,
+        cantidad,
+        id_usuario: 1, // más adelante dinámico
+      });
+
+      alert("✅ " + result.mensaje);
+    } catch (error) {
+      console.error("Error guardando producción:", error);
+      alert("❌ Error guardando producción: " + (error.response?.data?.error || error.message));
+    }
   };
 
   return (
@@ -60,8 +61,12 @@ const ProduccionPines = () => {
       <h2 className="titulo">CREAR PINES</h2>
 
       <div className="botones-tamanos">
-        <button className="btn-tamano">PEQUEÑOS</button>
-        <button className="btn-tamano">GRANDES</button>
+        <button className="btn-tamano" onClick={() => setTamano("pequeno")}>
+          PEQUEÑOS
+        </button>
+        <button className="btn-tamano" onClick={() => setTamano("grande")}>
+          GRANDES
+        </button>
 
         <button
           className="btn-cargar"
@@ -74,7 +79,10 @@ const ProduccionPines = () => {
           accept="image/*"
           style={{ display: "none" }}
           ref={fileInputRef}
-          onChange={handleFileChange}
+          onChange={(e) => {
+            const file = e.target.files[0];
+            if (file) handleFileUpload(file);
+          }}
         />
       </div>
 
@@ -85,14 +93,21 @@ const ProduccionPines = () => {
           <PinSlot
             key={index}
             image={pin}
-            onAdd={(url) => handleAddImage(index, url)}
-            onClickImage={() => openModal(index)} // 🔹 Nuevo: click en imagen abre modal
+            onAdd={(url) => {
+              const nuevosPines = [...pines];
+              nuevosPines[index] = url;
+              setPines(nuevosPines);
+            }}
+            onClickImage={() => {
+              setSelectedIndex(index);
+              setIsModalOpen(true);
+            }}
           />
         ))}
       </div>
 
       <div className="acciones">
-        <button className="btn-limpiar" onClick={handleClear}>
+        <button className="btn-limpiar" onClick={() => setPines(Array(12).fill(null))}>
           LIMPIAR
         </button>
         <button className="btn-imprimir" onClick={handlePrint}>
@@ -100,21 +115,16 @@ const ProduccionPines = () => {
         </button>
       </div>
 
-      {/* Modal de opciones */}
       <ImageOptionsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onEdit={() => fileInputRef.current.click()}
-        onDelete={() => handleRemoveImage(selectedIndex)}
-      />
-
-      {/* Input oculto para reemplazo individual */}
-      <input
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        ref={fileInputRef}
-        onChange={(e) => handleFileChange(e, selectedIndex)}
+        onDelete={() => {
+          const nuevosPines = [...pines];
+          nuevosPines[selectedIndex] = null;
+          setPines(nuevosPines);
+          setIsModalOpen(false);
+        }}
       />
     </div>
   );
