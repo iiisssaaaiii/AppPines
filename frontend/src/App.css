@@ -275,4 +275,292 @@
   margin-bottom: 10px;
 }
 
+/* === Inventario: acciones en panel === */
+.pin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.05s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.btn:active {
+  transform: scale(0.995);
+}
+
+.btn-primary {
+  background: #3498db; /* azul de tu paleta */
+  color: #fff;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #bdc3c7;
+  color: #2c3e50;
+}
+
+/* === Modal genérico === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.2);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Reaprovecha estilos tipo "NuevaImagen" */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.form-col { display: flex; flex-direction: column; gap: 10px; }
+.form-label { font-weight: 600; font-size: .95rem; }
+.form-input {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: .95rem;
+}
+.form-input:focus { outline: none; border-color: #3498db; }
+
 /*FIN DE INVENTARIO */
+
+/* ===== Página de Inventario – Layout general ===== */
+.inventario-page {
+  padding: 24px;
+  background: #f6f8fb; /* gris muy claro para que destaquen las tarjetas */
+  min-height: 100vh;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: .5px;
+}
+
+.section-subtitle {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+}
+
+.inventario-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* ===== Filtro / Dropdown bonito ===== */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-label {
+  font-weight: 600;
+}
+
+.pretty-select {
+  position: relative;
+  display: inline-block;
+}
+
+.pretty-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background: #ffffff;
+  border: 2px solid #d7deea;
+  border-radius: 12px;
+  padding: 10px 38px 10px 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(28, 37, 54, 0.06);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.pretty-select select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15);
+}
+
+.pretty-select::after {
+  content: "▾";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-52%);
+  pointer-events: none;
+  font-size: 14px;
+  opacity: .7;
+}
+
+/* ===== Grid de tarjetas (pines) ===== */
+.inventario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.inventario-panel {
+  background: #ffffff;
+  border: 1px solid #e6eaf2;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(40, 52, 71, 0.08);
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.inventario-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(40, 52, 71, 0.12);
+  border-color: #d6deee;
+}
+
+/* imagen circular con anillo */
+.pin-image {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.pin-image img {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 9999px;
+  outline: 6px solid #f2f6ff;
+  border: 2px solid #e8efff;
+}
+
+/* texto del panel */
+.pin-info p {
+  margin: 6px 0;
+}
+
+/* acciones ya definidas: .pin-actions, .btn, .btn-primary, .btn-danger, .btn-full */
+
+/* ===== Estados y placeholders ===== */
+.empty-state,
+.skeleton-card {
+  background: #ffffff;
+  border: 1px dashed #cfd6e4;
+  color: #4b5563;
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+/* ===== Tarjeta y tabla de Materia Prima ===== */
+.materia-card {
+  background: #ffffff;
+  border: 1px solid #e6eaf2;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(40, 52, 71, 0.08);
+}
+
+.table-wrapper {
+  overflow: auto; /* scroll si se hace muy ancha */
+  margin-top: 10px;
+}
+
+.materia-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.materia-table thead th {
+  font-weight: 700;
+  padding: 12px 14px;
+  background: linear-gradient(0deg, #f7faff, #eef3ff);
+  border-bottom: 2px solid #e0e6f2;
+}
+
+.materia-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef2f8;
+}
+
+.materia-table tbody tr:nth-child(even) {
+  background: #fafcff;
+}
+
+.materia-table tbody tr:hover {
+  background: #f0f6ff;
+}
+
+/* ===== Botones (ya existían, los mantenemos y afinamos) ===== */
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.05s ease, box-shadow 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+}
+
+.btn:active { transform: scale(0.992); }
+
+.btn-primary {
+  background: #3498db;
+  color: #fff;
+  box-shadow: 0 6px 12px rgba(52, 152, 219, 0.25);
+}
+.btn-primary:hover { filter: brightness(1.03); }
+
+.btn-danger {
+  background: #e74c3c;
+  color: #fff;
+  box-shadow: 0 6px 12px rgba(231, 76, 60, 0.25);
+}
+.btn-danger:hover { filter: brightness(1.03); }
+
+.btn-secondary {
+  background: #bdc3c7;
+  color: #2c3e50;
+}
