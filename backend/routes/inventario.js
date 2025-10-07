@@ -11,15 +11,16 @@ router.get("/pines", async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT 
-        p.id_pin, 
-        p.url_imagen, 
-        p.etiquetas, 
-        p.tamano, 
-        IFNULL(i.cantidad, 0) AS cantidad, 
+        p.id_pin,
+        p.nombre,
+        p.url_imagen,
+        p.etiquetas,
+        p.tamano,
+        IFNULL(i.cantidad, 0) AS cantidad,
         p.fecha_creacion,
         DATEDIFF(CURDATE(), DATE(p.fecha_creacion)) AS tiempo_en_stock
       FROM pines p
-      LEFT JOIN inventario_pines i ON p.id_pin = i.id_pin
+      LEFT JOIN inventario_pines i ON i.id_pin = p.id_pin
     `);
     res.json(rows);
   } catch (error) {
@@ -51,15 +52,16 @@ router.get("/", async (req, res) => {
   try {
     const [pines] = await db.query(`
       SELECT 
-        p.id_pin, 
-        p.url_imagen, 
-        p.etiquetas, 
-        p.tamano, 
+        p.id_pin,
+        p.nombre,
+        p.url_imagen,
+        p.etiquetas,
+        p.tamano,
         IFNULL(i.cantidad, 0) AS cantidad,
         p.fecha_creacion,
         DATEDIFF(CURDATE(), DATE(p.fecha_creacion)) AS tiempo_en_stock
       FROM pines p
-      LEFT JOIN inventario_pines i ON p.id_pin = i.id_pin
+      LEFT JOIN inventario_pines i ON i.id_pin = p.id_pin
     `);
 
     const [materiaPrima] = await db.query(`
