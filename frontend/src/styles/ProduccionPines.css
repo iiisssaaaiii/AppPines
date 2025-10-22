@@ -161,3 +161,153 @@
   color: white;
 }
 
+/* src/styles/ProduccionPines.css */
+/* ... (el resto de tus estilos) ... */
+
+.grid-pines-grande {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.grid-pines-pequeno {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* 7 columnas */
+  gap: 10px; /* Ajusta el espacio para que quepan */
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.pin-slot {
+  width: 100px;
+  height: 100px;
+  border: 1px dashed #ccc;
+  border-radius: 50%; /* Mantén la forma circular */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.grid-pines-pequeno .pin-slot {
+  width: 70px; /* Tamaño más pequeño para la nueva cuadrícula */
+  height: 70px;
+}
+
+/* ... (el resto de tus estilos) ... */
+.btn-exportar-pdf {
+  background-color: #f44336;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.hoja-carta {
+  width: 279.4mm;
+  height: 215.9mm;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.grid-pines-pequeno {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 8mm;
+}
+
+.grid-pines-grande {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 12mm;
+}
+
+.grid-pines-pequeno .pin-slot {
+  width: 32mm;
+  height: 32mm;
+}
+
+.grid-pines-grande .pin-slot {
+  width: 58mm;
+  height: 58mm;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .hoja-carta,
+  .hoja-carta * {
+    visibility: visible;
+  }
+  .hoja-carta {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 279.4mm;
+    height: 215.9mm;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+/* --- Ajustes para impresión --- */
+@page {
+  size: letter landscape; /* Hoja carta horizontal */
+  margin: 0; /* Quita márgenes del navegador */
+}
+
+@media print {
+  html, body {
+    width: 279.4mm;
+    height: 215.9mm;
+    margin: 0;
+    padding: 0;
+    background: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ocultar todo excepto la hoja */
+  body * {
+    visibility: hidden !important;
+  }
+
+  .hoja-carta, .hoja-carta * {
+    visibility: visible !important;
+  }
+
+  /* Centrar la hoja en pantalla de impresión */
+  .hoja-carta {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 279.4mm;
+    height: 215.9mm;
+    margin: 0;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background: #fff;
+  }
+}
+
+/* --- Opcional: mejora visual general --- */
+.hoja-carta {
+  box-sizing: border-box;
+  overflow: hidden; /* evita que el contenido salga del área */
+  padding: 8mm; /* añade espacio interno para evitar corte */
+}
