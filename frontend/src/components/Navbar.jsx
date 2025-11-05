@@ -9,7 +9,8 @@ const Navbar = () => {
     { path: "/inventario", label: "Inventario", icon: "📦" },
     { path: "/ventas", label: "Ventas", icon: "💰" },
     { path: "/reportes", label: "Reportes", icon: "📊" },
-    { path: "/administracion", label: "Administración", icon: "⚙️" }
+    { path: "/administracion", label: "Administración", icon: "⚙️" },
+    { path: "/catalogo", label: "Catálogo", icon: "📔"}
   ];
 
   return (
