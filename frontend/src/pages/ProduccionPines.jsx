@@ -69,6 +69,36 @@ const ProduccionPines = () => {
     }
   };
 
+  const handleGuardarPlantilla = async () => {
+    console.log("🧩 Click detectado en GUARDAR PLANTILLA");
+    const cantidad = pines.filter((p) => p !== null).length;
+    const primeraImagen = pines.find((p) => p !== null);
+
+    if (cantidad === 0 || !primeraImagen) {
+      alert("❌ Debes tener al menos una imagen antes de guardar");
+      return;
+    }
+
+    try {
+      const respuesta = await fetch("http://localhost:4000/api/produccion/guardarPlantilla", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          etiquetas: "Diseño de pines",
+          tamano,
+          cantidad,
+          url_imagen: primeraImagen,
+          id_usuario: 1,
+        }),
+      });
+
+      const data = await respuesta.json();
+      alert(data.mensaje || "✅ Plantilla guardada correctamente.");
+    } catch (error){
+      console.error("Error al guardar plantilla: ", error)
+    } 
+  }
+
   const changeTamano = (newTamano) => {
     setTamano(newTamano);
     setPines(getInitialPines(newTamano));
@@ -142,6 +172,13 @@ const ProduccionPines = () => {
         <button className="btn-exportar-pdf" onClick={handleExportPdf}>
           EXPORTAR PDF
         </button>
+        <button
+          className="btn btn-primary btn-full"
+          onClick={handleGuardarPlantilla}
+        >
+          Guardar Plantilla
+        </button>
+
       </div>
 
       <ImageOptionsModal

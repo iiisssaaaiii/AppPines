@@ -116,4 +116,34 @@ router.post("/", upload.single("imagen"), async (req, res) => {
   }
 });
 
+  /**
+ * 📌 POST /api/produccion/guardarPlantilla
+ * Guarda los pines actuales en la tabla Plantilla
+ */
+router.post("/guardarPlantilla", async (req, res) => {
+  console.log("📩 Solicitud recibida en /api/produccion/guardarPlantilla");
+  console.log("Body recibido:", req.body);
+
+  try {
+    const { etiquetas, tamano, cantidad, url_imagen, id_usuario } = req.body;
+
+    if (!etiquetas || !tamano || !cantidad || !url_imagen) {
+      return res.status(400).json({ error: "Faltan datos obligatorios" });
+    }
+
+    const connection = await db.getConnection();
+    const query = `
+      INSERT INTO Plantilla (etiquetas, tamano, cantidad, url_imagen, id_usuario)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    await connection.query(query, [etiquetas, tamano, cantidad, url_imagen, id_usuario]);
+    connection.release();
+
+    res.json({ mensaje: "Plantilla guardada correctamente" });
+  } catch (error) {
+    console.error("❌ Error al guardar en Plantilla:", error);
+    res.status(500).json({ error: "Error al guardar la plantilla" });
+  }
+});
+
 export default router;

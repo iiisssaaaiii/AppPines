@@ -7,6 +7,7 @@ import ProduccionPines from "./pages/ProduccionPines";
 import Navbar from "./components/Navbar";
 import Inventario from "./pages/Inventario";
 import Reportes from "./pages/Reportes";
+import Catalogo from "./pages/Catalogo";
 
 
 const Ventas = () => (
@@ -39,7 +40,8 @@ function App() {
             <Route path="/ventas" element={<Ventas />} />
             <Route path="/reportes" element={<Reportes />} />
             <Route path="/administracion" element={<Administracion />} />
-            
+            <Route path="/catalogo" element={<Catalogo />} />
+
           </Routes>
         </main>
       </div>

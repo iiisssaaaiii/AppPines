@@ -564,3 +564,78 @@
   background: #bdc3c7;
   color: #2c3e50;
 }
+
+.alerta-stock-bajo {
+  background-color: #ffcccc;
+  color: #b30000;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* Contenedor general */
+.page-container {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: auto;
+}
+
+/* Título */
+.section-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #1e3a8a; /* azul oscuro */
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Tabla */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  background: #fff;
+}
+
+.catalogo-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.catalogo-table th {
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+}
+
+.catalogo-table td {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Filas alternadas */
+.catalogo-table tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+/* Imagen */
+.pin-preview {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+}
+
+/* Estado vacío */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  font-style: italic;
+  color: #64748b;
+}

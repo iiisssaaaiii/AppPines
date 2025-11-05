@@ -21,6 +21,17 @@ const Inventario = () => {
       const data = await obtenerInventario();
       setPines(data.inventario || []);
       setMateriaPrima(data.materiaPrima || []);
+      //Verificar bajo stock
+      const pinesBajoStock = (data.inventario || []).filter(
+        (pin) => pin.cantidad <= (pin.stock_minimo || 5)
+      );
+
+      if (pinesBajoStock.length > 0){
+        const nombres = pinesBajoStock
+          .map((p) => p.nombre || `Pin #${p.id_pin}`)
+          .join(", ");
+        alert(`⚠️ Los siguientes pines están bajos en stock: ${nombres}`);
+      }
     } catch (err) {
       console.error("Error al obtener inventario:", err);
       alert("No se pudo cargar el inventario");
@@ -99,6 +110,12 @@ const Inventario = () => {
         {pinesFiltrados?.length ? (
           pinesFiltrados.map((pin) => (
             <div key={pin.id_pin} className="inventario-panel">
+              {pin.cantidad <= (pin.stock_minimo||5) && (
+                <div className="alerta-stock-bajo">
+                  ⚠️ Bajo stock: solo {pin.cantidad} unidades
+                </div>
+              )}
+              
               <div className="pin-image">
                 <img
                   src={pin.url_imagen}
