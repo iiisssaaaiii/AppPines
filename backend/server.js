@@ -11,7 +11,19 @@ import cors from "cors";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000", // el puerto donde corre tu app React
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"],
+  credentials: true,
+}));
+
+app.use("/uploads", express.static("uploads", {
+  setHeaders: (res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  },
+}));
+
 
 // 📂 Asegurar que la carpeta uploads exista
 const uploadsPath = path.resolve("uploads");
