@@ -52,22 +52,35 @@ const ProduccionPines = () => {
   };
 
   const confirmExportPdf = async () => {
-    const input = printRef.current;
-    if (input) {
-      const canvas = await html2canvas(input, {
-        scale: 2,
-        backgroundColor: "#fff",
-      });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("l", "mm", "letter"); // horizontal, tamaño carta
-      const pdfWidth = 279.4;
-      const pdfHeight = 215.9;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save("pines.pdf");
-      setIsConfirmationModalOpen(false);
-      alert("✅ PDF generado correctamente.");
-    }
-  };
+  const input = printRef.current;
+  if (!input) {
+    alert("No se encontró el área para exportar");
+    return;
+  }
+
+  try {
+    const canvas = await html2canvas(input, {
+      scale: 2,
+      useCORS: true, // permite cargar imágenes externas
+      backgroundColor: "#ffffff"
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("l", "mm", "letter");
+    const pdfWidth = 279.4;
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    pdf.save("pines.pdf");
+
+    setIsConfirmationModalOpen(false);
+    alert("✅ PDF generado correctamente.");
+  } catch (error) {
+    console.error("Error generando PDF:", error);
+    alert("❌ Ocurrió un error al generar el PDF.");
+  }
+};
+
 
   const handleGuardarPlantilla = async () => {
     console.log("🧩 Click detectado en GUARDAR PLANTILLA");
