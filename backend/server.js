@@ -6,6 +6,7 @@ import produccionRoutes from "./routes/produccion.js";
 import pinesRoutes from "./routes/pines.js";
 import catalogoRoutes from "./routes/catalogo.js";
 import ventasRoutes from "./routes/ventas.js";  // Importa las rutas de ventas
+import reportesRoutes from "./routes/reportes.js";  // Importa las rutas de reportes
 import path from "path";
 import fs from "fs";
 import cors from "cors";
@@ -22,8 +23,8 @@ if (!fs.existsSync(uploadsPath)) {
 }
 
 // 📌 Middleware para JSON
-app.use(express.json({limit: "50mb"}));
-app.use(express.urlencoded({extended: true, limit: "50mb"}));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // 📌 Servir archivos estáticos (imágenes en /uploads)
 app.use("/uploads", express.static(uploadsPath));
@@ -40,6 +41,7 @@ app.use("/api/produccion", produccionRoutes);
 app.use("/api/pines", pinesRoutes);
 app.use("/api/catalogo", catalogoRoutes);
 app.use("/api/ventas", ventasRoutes);  // Usa las rutas de ventas
+app.use("/api/reportes", reportesRoutes);  // Usa las rutas de reportes
 
 // 📌 Servidor
 const PORT = 4000;

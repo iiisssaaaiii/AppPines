@@ -189,37 +189,51 @@ router.put("/:id", async (req, res) => {
 });
 
 /**
- * ✅ GET /api/pines/:id/tags
- * Obtiene las etiquetas asociadas a un pin.
- * Devuelve un array de etiquetas (nombre).
+ * ✅ GET /api/pines
+ * Lista pines. Soporta:
+ *  - ?id=123  → obtiene un pin específico
+ *  - ?tag=anime → filtra por etiqueta (LIKE %tag%)
+ * Devuelve también 'tiempo_en_stock' (días desde fecha_creacion) y las etiquetas asociadas.
  */
-router.get("/:id/tags", async (req, res) => {
-  const id_pin = parseInt(req.params.id, 10);
-  
-  if (Number.isNaN(id_pin)) {
-    return res.status(400).json({ error: "ID de pin inválido" });
-  }
-
+router.get("/", async (req, res) => {
   try {
-    // Obtener las etiquetas asociadas al pin usando JOIN entre pin_tags y tags
-    const [tags] = await db.query(
-      `SELECT t.nombre 
-       FROM tags t 
-       JOIN pin_tags pt ON t.id_tag = pt.id_tag 
-       WHERE pt.id_pin = ?`,
-      [id_pin]
-    );
+    const { id, tag } = req.query;
 
-    if (tags.length === 0) {
-      return res.status(404).json({ error: "No se encontraron etiquetas para este pin" });
+    let query = `
+      SELECT 
+        p.id_pin,
+        p.nombre,
+        p.url_imagen,
+        p.etiquetas,
+        p.tamano,
+        IFNULL(i.cantidad, 0) AS cantidad,
+        p.fecha_creacion,
+        DATEDIFF(CURDATE(), DATE(p.fecha_creacion)) AS tiempo_en_stock,
+        GROUP_CONCAT(t.nombre) AS etiquetas  -- Agrupa las etiquetas asociadas a cada pin
+      FROM pines p
+      LEFT JOIN inventario_pines i ON i.id_pin = p.id_pin
+      LEFT JOIN pin_tags pt ON pt.id_pin = p.id_pin
+      LEFT JOIN tags t ON t.id_tag = pt.id_tag
+    `;
+    const params = [];
+
+    if (id) {
+      query += " WHERE p.id_pin = ? ";
+      params.push(Number(id));
+    } else if (tag) {
+      query += " WHERE t.nombre LIKE ? ";
+      params.push(`%${tag}%`);
     }
 
-    // Devuelve las etiquetas encontradas
-    res.json(tags);
+    query += " GROUP BY p.id_pin ORDER BY p.fecha_creacion DESC;";  // Agrupar por id_pin para obtener las etiquetas correctas
+
+    const [rows] = await db.query(query, params);
+    res.json(rows);
   } catch (error) {
-    console.error("❌ Error GET /pines/:id/tags:", error.message);
-    res.status(500).json({ error: "Error obteniendo etiquetas del pin" });
+    console.error("❌ Error en GET /pines:", error.message);
+    res.status(500).json({ error: "Error obteniendo pines" });
   }
 });
+
 
 export default router;
