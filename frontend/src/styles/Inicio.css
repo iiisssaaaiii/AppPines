@@ -1,0 +1,218 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+:root {
+  --color-bg: #f4f4f4;
+  --color-card-bg: #ffffff;
+  --color-primary: #2c3e50;
+  --color-accent: #385f86;
+  --color-text: #222;
+  --color-text-muted: #666;
+}
+
+[data-theme="dark"] {
+  --color-bg: #1e1e1e;
+  --color-card-bg: #2c2c2c;
+  --color-primary: #1b2838;
+  --color-accent: #4a6fa3;
+  --color-text: #e0e0e0;
+  --color-text-muted: #bdbdbd;
+}
+
+.inicio-body {
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.5s ease, color 0.5s ease;
+  opacity: 0;
+  animation: fadeInBody 1s forwards ease-in-out;
+}
+
+@keyframes fadeInBody {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ======== Header ======== */
+.inicio-header {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 10;
+
+  /* ✅ ocupa todo el ancho real, ignorando padding del padre */
+  width: 107.8%;
+  margin-left: calc(-50vw + 50%);
+}
+
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-section img {
+  height: 48px;
+  width: 48px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.inicio-header h1 {
+  margin: 0;
+  font-size: 1.6em;
+  font-weight: 600;
+}
+
+.theme-toggle {
+  background: none;
+  border: 2px solid white;
+  color: white;
+  border-radius: 25px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background: white;
+  color: var(--color-primary);
+  transform: scale(1.1);
+}
+
+/* ======== Bienvenida ======== */
+.welcome-container {
+  width: 90%;
+  max-width: 1180px;
+  margin: 0 auto 10px auto; /* ✅ quita margen superior para subir el bloque */
+  padding-top: 15px;        /* espacio suave para respirar */
+  animation: fadeInDown 1s ease;
+  text-align: left;
+}
+
+.welcome-container h2 {
+  font-size: 1.9em;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.welcome-container p {
+  font-size: 1.05em;
+  margin-top: 5px;
+  color: var(--color-text-muted);
+}
+
+/* ======== Tarjetas ======== */
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 20px 2%;
+  animation: fadeInUp 1.2s ease;
+}
+
+.card {
+  background-color: var(--color-card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 190px;
+  text-align: center;
+  padding: 18px 10px;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: all 0.4s ease;
+  cursor: pointer;
+  border-top: 3px solid transparent;
+}
+
+.card img {
+  width: 78px;
+  height: 78px;
+  object-fit: contain;
+  margin-top: 10px;
+  transition: transform 0.3s ease;
+}
+
+.card h3 {
+  font-size: 1.1em;
+  margin: 12px 0 8px;
+  font-weight: 600;
+}
+
+.card p {
+  font-size: 0.95em;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+  border-top: 3px solid var(--color-accent);
+}
+
+.card:hover img {
+  transform: scale(1.1);
+}
+
+/* Animaciones */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .container {
+    justify-content: center;
+  }
+  .card {
+    width: 45%;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .card {
+    width: 90%;
+    max-width: 320px;
+  }
+  .inicio-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
