@@ -5,6 +5,7 @@ import inventarioRoutes from "./routes/inventario.js";
 import produccionRoutes from "./routes/produccion.js";
 import pinesRoutes from "./routes/pines.js";
 import catalogoRoutes from "./routes/catalogo.js";
+import ventasRoutes from "./routes/ventas.js";  // Importa las rutas de ventas
 import path from "path";
 import fs from "fs";
 import cors from "cors";
@@ -50,6 +51,7 @@ app.use("/api/inventario", inventarioRoutes);
 app.use("/api/produccion", produccionRoutes);
 app.use("/api/pines", pinesRoutes);
 app.use("/api/catalogo", catalogoRoutes);
+app.use("/api/ventas", ventasRoutes);  // Usa las rutas de ventas
 
 // 📌 Servidor
 const PORT = 4000;

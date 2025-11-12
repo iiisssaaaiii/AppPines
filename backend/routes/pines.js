@@ -1,52 +1,7 @@
-// backend/routes/pines.js
 import express from "express";
 import db from "../config/db.js";
 
 const router = express.Router();
-
-/**
- * ✅ GET /api/pines
- * Lista pines. Soporta:
- *  - ?id=123  → obtiene un pin específico
- *  - ?tag=anime → filtra por etiqueta (LIKE %tag%)
- * Devuelve también 'tiempo_en_stock' (días desde fecha_creacion)
- */
-router.get("/", async (req, res) => {
-  try {
-    const { id, tag } = req.query;
-
-    let query = `
-      SELECT 
-        p.id_pin,
-        p.nombre,
-        p.url_imagen,
-        p.etiquetas,
-        p.tamano,
-        IFNULL(i.cantidad, 0) AS cantidad,
-        p.fecha_creacion,
-        DATEDIFF(CURDATE(), DATE(p.fecha_creacion)) AS tiempo_en_stock
-      FROM pines p
-      LEFT JOIN inventario_pines i ON i.id_pin = p.id_pin
-    `;
-    const params = [];
-
-    if (id) {
-      query += " WHERE p.id_pin = ? ";
-      params.push(Number(id));
-    } else if (tag) {
-      query += " WHERE p.etiquetas LIKE ? ";
-      params.push(`%${tag}%`);
-    }
-
-    query += " ORDER BY p.fecha_creacion DESC;";
-
-    const [rows] = await db.query(query, params);
-    res.json(rows);
-  } catch (error) {
-    console.error("❌ Error en GET /pines:", error.message);
-    res.status(500).json({ error: "Error obteniendo pines" });
-  }
-});
 
 /**
  * ✅ POST /api/pines
@@ -71,15 +26,32 @@ router.post("/", async (req, res) => {
     try {
       await conn.beginTransaction();
 
+      // Crear el pin en la tabla pines
       const [result] = await conn.query(
         "INSERT INTO pines (nombre, url_imagen, etiquetas, tamano, fecha_creacion) VALUES (?, ?, ?, ?, ?)",
         [nombre || null, url_imagen, etiquetas || "", tamano, fecha_creacion || new Date()]
       );
 
+      // Crear inventario
       await conn.query(
         "INSERT INTO inventario_pines (id_pin, cantidad) VALUES (?, ?)",
         [result.insertId, Number(cantidad) || 0]
       );
+
+      // Asociar etiquetas al pin (si existen)
+      for (let tag of etiquetas) {
+        // Verificar si la etiqueta ya existe
+        const [tagResult] = await conn.query('SELECT id_tag FROM tags WHERE nombre = ?', [tag]);
+
+        if (tagResult.length > 0) {
+          // Si la etiqueta existe, asociarla
+          await conn.query('INSERT INTO pin_tags (id_pin, id_tag) VALUES (?, ?)', [result.insertId, tagResult[0].id_tag]);
+        } else {
+          // Si la etiqueta no existe, crearla y asociarla
+          const [newTagResult] = await conn.query('INSERT INTO tags (nombre) VALUES (?)', [tag]);
+          await conn.query('INSERT INTO pin_tags (id_pin, id_tag) VALUES (?, ?)', [result.insertId, newTagResult.insertId]);
+        }
+      }
 
       await conn.commit();
 
@@ -167,6 +139,26 @@ router.put("/:id", async (req, res) => {
       }
     }
 
+    // Asociar las etiquetas actualizadas al pin
+    if (etiquetas) {
+      // Borrar las etiquetas existentes
+      await conn.query("DELETE FROM pin_tags WHERE id_pin = ?", [id]);
+
+      // Asociar las nuevas etiquetas
+      for (let tag of etiquetas) {
+        const [tagResult] = await conn.query('SELECT id_tag FROM tags WHERE nombre = ?', [tag]);
+
+        if (tagResult.length > 0) {
+          // Si la etiqueta existe, asociarla
+          await conn.query('INSERT INTO pin_tags (id_pin, id_tag) VALUES (?, ?)', [id, tagResult[0].id_tag]);
+        } else {
+          // Si la etiqueta no existe, crearla y asociarla
+          const [newTagResult] = await conn.query('INSERT INTO tags (nombre) VALUES (?)', [tag]);
+          await conn.query('INSERT INTO pin_tags (id_pin, id_tag) VALUES (?, ?)', [id, newTagResult.insertId]);
+        }
+      }
+    }
+
     await conn.commit();
 
     // Devolver el pin actualizado
@@ -197,30 +189,36 @@ router.put("/:id", async (req, res) => {
 });
 
 /**
- * ✅ DELETE /api/pines/:id
- * Elimina un pin y su inventario asociado.
- * (Si tu FK no tiene ON DELETE CASCADE, eliminamos inventario manualmente)
+ * ✅ GET /api/pines/:id/tags
+ * Obtiene las etiquetas asociadas a un pin.
+ * Devuelve un array de etiquetas (nombre).
  */
-router.delete("/:id", async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (Number.isNaN(id)) {
-    return res.status(400).json({ error: "ID inválido" });
+router.get("/:id/tags", async (req, res) => {
+  const id_pin = parseInt(req.params.id, 10);
+  
+  if (Number.isNaN(id_pin)) {
+    return res.status(400).json({ error: "ID de pin inválido" });
   }
 
   try {
-    // Borrar inventario primero (idempotente)
-    await db.query("DELETE FROM inventario_pines WHERE id_pin = ?", [id]);
+    // Obtener las etiquetas asociadas al pin usando JOIN entre pin_tags y tags
+    const [tags] = await db.query(
+      `SELECT t.nombre 
+       FROM tags t 
+       JOIN pin_tags pt ON t.id_tag = pt.id_tag 
+       WHERE pt.id_pin = ?`,
+      [id_pin]
+    );
 
-    const [result] = await db.query("DELETE FROM pines WHERE id_pin = ?", [id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Pin no encontrado" });
+    if (tags.length === 0) {
+      return res.status(404).json({ error: "No se encontraron etiquetas para este pin" });
     }
 
-    // 204 No Content para éxito sin cuerpo
-    res.status(204).send();
-  } catch (err) {
-    console.error("❌ Error DELETE /pines/:id:", err.message);
-    res.status(500).json({ error: "No se pudo eliminar el pin" });
+    // Devuelve las etiquetas encontradas
+    res.json(tags);
+  } catch (error) {
+    console.error("❌ Error GET /pines/:id/tags:", error.message);
+    res.status(500).json({ error: "Error obteniendo etiquetas del pin" });
   }
 });
 
