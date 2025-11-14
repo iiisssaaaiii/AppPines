@@ -639,3 +639,17 @@
   font-style: italic;
   color: #64748b;
 }
+
+/* 🔹 Layout especial para la pantalla de Inicio */
+
+.App-inicio {
+  /* que el fondo use las variables de tema (claro/oscuro) */
+  background-color: var(--color-bg);
+}
+
+/* El main de inicio no debe limitarse a 1200px ni tener padding */
+.inicio-main {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}

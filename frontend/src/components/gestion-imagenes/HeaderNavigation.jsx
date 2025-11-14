@@ -6,12 +6,11 @@ const HeaderNavigation = () => {
   const location = useLocation();
 
   const menus = [
-    { path: '/', label: 'Gestión de imágenes', key: 'gestion' },
+    { path: '/inicio', label: 'Ventas', key: 'inicio' },
+    { path: '/nueva-imagen', label: 'Gestión de imágenes', key: 'gestion' },
     { path: '/produccion', label: 'Producción de pines', key: 'produccion' },
     { path: '/inventario', label: 'Inventario de pines', key: 'inventario' },
-    { path: '/ventas', label: 'Ventas', key: 'ventas' },
     { path: '/reportes', label: 'Reportes', key: 'reportes' },
-    { path: '/administracion', label: 'Administración', key: 'administracion' }
   ];
 
   const isActive = (path) => {
