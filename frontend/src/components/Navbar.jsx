@@ -4,12 +4,11 @@ import { NavLink } from "react-router-dom";
 
 const Navbar = () => {
   const menuItems = [
-    { path: "/", label: "Nueva Imagen", icon: "➕" },
+    { path: '/', label: 'Inicio', key: 'inicio', icon: "🏠" },
+    { path: "/nueva-imagen", label: "Nueva Imagen", icon: "➕" },
     { path: "/produccion", label: "Producción", icon: "🏭" },
     { path: "/inventario", label: "Inventario", icon: "📦" },
-    { path: "/ventas", label: "Ventas", icon: "💰" },
     { path: "/reportes", label: "Reportes", icon: "📊" },
-    { path: "/administracion", label: "Administración", icon: "⚙️" },
     { path: "/catalogo", label: "Catálogo", icon: "📔"}
   ];
 

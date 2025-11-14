@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/Inicio.css";
 import logo from "../assets/icons/logo.png";
 import imgImagenes from "../assets/icons/imagens.png";
@@ -10,30 +10,33 @@ import imgCatalogo from "../assets/icons/catalogo.png";
 const Inicio = () => {
   const [theme, setTheme] = useState("light");
 
+  // 🔥 Afecta al <body>, no solo al div
+  useEffect(() => {
+    document.body.setAttribute("data-theme", theme);
+  }, [theme]);
+
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
   return (
-    <div data-theme={theme} className="inicio-body">
-      {/* ===== Header propio (sin Navbar global) ===== */}
+    <div className="inicio-body">
       <header className="inicio-header">
         <div className="logo-section">
           <img src={logo} alt="Logo PinesApp" />
           <h1>PinesApp - Panel de Administración</h1>
         </div>
+
         <button className="theme-toggle" onClick={toggleTheme}>
           {theme === "light" ? "🌙" : "☀️"}
         </button>
       </header>
 
-      {/* ===== Bienvenida ===== */}
       <div className="welcome-container">
         <h2>¡Bienvenido!</h2>
         <p>Gestiona imágenes, producción, inventario y más desde un solo lugar.</p>
       </div>
 
-      {/* ===== Tarjetas ===== */}
       <div className="container">
         <a href="/nueva-imagen" className="card">
           <img src={imgImagenes} alt="Gestión de Imágenes" />
