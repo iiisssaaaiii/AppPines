@@ -38,31 +38,31 @@ const Inicio = () => {
       </div>
 
       <div className="container">
-        <a href="/nueva-imagen" className="card">
+        <a href="/gestion-imagenes" className="cardInicio">
           <img src={imgImagenes} alt="Gestión de Imágenes" />
           <h3>Gestión de Imágenes</h3>
           <p>Sube, edita y organiza las imágenes para los pines.</p>
         </a>
 
-        <a href="/produccion" className="card">
+        <a href="/produccion" className="cardInicio">
           <img src={imgProduccion} alt="Producción de Pines" />
           <h3>Producción de Pines</h3>
           <p>Controla el proceso de producción y fabricación de los pines.</p>
         </a>
 
-        <a href="/inventario" className="card">
+        <a href="/inventario" className="cardInicio">
           <img src={imgInventario} alt="Inventario" />
           <h3>Inventario</h3>
           <p>Gestiona el stock de pines y materiales.</p>
         </a>
 
-        <a href="/reportes" className="card">
+        <a href="/reportes" className="cardInicio">
           <img src={imgReportes} alt="Reportes" />
           <h3>Reportes</h3>
           <p>Genera reportes de producción y ventas.</p>
         </a>
 
-        <a href="/catalogo" className="card">
+        <a href="/catalogo" className="cardInicio">
           <img src={imgCatalogo} alt="Catálogo" />
           <h3>Catálogo</h3>
           <p>Explora todos los diseños de pines disponibles.</p>

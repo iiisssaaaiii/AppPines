@@ -1,273 +1,246 @@
-import React, { useState, useRef } from "react";
-import { imprimirPines } from "../services/produccionService"; // ✅ importar servicio
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/NuevaImagen.css";
+import ModalTags from "../components/gestion-imagenes/nuevaImagen/ModalTags";
+import {
+  subirImagen,
+  obtenerTags as obtenerTagsService,
+} from "../services/imagenesService";
+import placeholderImg from "../assets/icons/placeholder-image.png";
 
-const NuevaImagen = () => {
-  const [nombre, setNombre] = useState("");
-  const [etiquetas, setEtiquetas] = useState([]);
-  const [nuevaEtiqueta, setNuevaEtiqueta] = useState("");
-  const [imagen, setImagen] = useState(null);
-  const [imagenPreview, setImagenPreview] = useState(null);
+const PLACEHOLDER_PREVIEW = placeholderImg;
+
+export default function NuevaImagen() {
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  const agregarEtiqueta = () => {
-    if (nuevaEtiqueta.trim() !== "") {
-      setEtiquetas([...etiquetas, nuevaEtiqueta.trim()]);
-      setNuevaEtiqueta("");
+  const [nombreImagen, setNombreImagen] = useState("");
+  const [archivo, setArchivo] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(PLACEHOLDER_PREVIEW);
+  const [fileInfo, setFileInfo] = useState({
+    nombre: "—",
+    tamano: "—",
+    tipo: "—",
+  });
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Todas las tags disponibles (desde BD)
+  const [allTags, setAllTags] = useState([]);
+
+  // Tags seleccionadas para esta imagen
+  const [selectedTags, setSelectedTags] = useState([]);
+
+  // Cargar tags desde backend al montar
+  useEffect(() => {
+    const cargarTags = async () => {
+      try {
+        const tagsBD = await obtenerTagsService();
+        // tagsBD viene como [{id_tag, label, color}, ...]
+        // Lo usamos tal cual para el modal
+        setAllTags(tagsBD);
+      } catch (err) {
+        console.error("Error cargando tags:", err);
+      }
+    };
+
+    cargarTags();
+  }, []);
+
+  const handleFileClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setArchivo(file);
+
+    // Preview
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+
+    // Info
+    const sizeMB = file.size / (1024 * 1024);
+    setFileInfo({
+      nombre: file.name,
+      tamano: `${sizeMB.toFixed(2)} MB`,
+      tipo: file.type || "—",
+    });
+
+    // Si el nombre está vacío, proponemos el nombre sin extensión
+    if (!nombreImagen) {
+      const nombreSinExt = file.name.replace(/\.[^/.]+$/, "");
+      setNombreImagen(nombreSinExt);
     }
   };
 
-  const eliminarEtiqueta = (index) => {
-    setEtiquetas(etiquetas.filter((_, i) => i !== index));
+  const handleCancelar = () => {
+    navigate("/gestion-imagenes");
   };
 
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setImagen(file);
-
-      // Crear preview de la imagen
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagenPreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
+  const handleAgregar = async () => {
+    if (!archivo) {
+      alert("Selecciona una imagen antes de continuar");
+      return;
     }
-  };
 
-  const handleUploadClick = () => {
-    fileInputRef.current.click();
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setImagen(file);
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagenPreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!imagen) {
-      alert("Por favor, selecciona una imagen");
+    if (!nombreImagen.trim()) {
+      alert("Ingresa un nombre para la imagen");
       return;
     }
 
     try {
-      // ⚡ Aquí usamos el servicio del backend
-      const result = await imprimirPines({
-        url_imagen: imagenPreview, // En esta fase usamos la preview base64 (luego se puede guardar en servidor real)
-        etiquetas: etiquetas.join(","),
-        tamano: "grande", // o "pequeno" según la selección en tu UI
-        cantidad: 12, // ejemplo: una hoja completa de pines grandes
-        id_usuario: 1 // luego se reemplaza con el usuario autenticado
+      const resp = await subirImagen({
+        nombre: nombreImagen.trim(),
+        archivo,
+        tags: selectedTags, // [{label,color}, ...]
       });
 
-      alert(`✅ ${result.mensaje}`);
-
-      // Resetear formulario después de éxito
-      setNombre("");
-      setEtiquetas([]);
-      setImagen(null);
-      setImagenPreview(null);
+      if (resp.success) {
+        alert("Imagen guardada correctamente 🎉");
+        navigate("/gestion-imagenes");
+      } else {
+        alert("No se pudo guardar la imagen.");
+      }
     } catch (error) {
-      console.error("Error al enviar al backend:", error);
-      alert("❌ Error al registrar la producción");
+      console.error("Error subiendo imagen:", error);
+      alert("Ocurrió un error al subir la imagen.");
     }
-  };
-
-  const handleCancel = () => {
-    setNombre("");
-    setEtiquetas([]);
-    setImagen(null);
-    setImagenPreview(null);
+    
+    console.log("ENVIANDO TAGS:", selectedTags);
   };
 
   return (
-    <div className="nueva-imagen-container">
-      <div className="page-header">
-        <h1>Tienda de Pines</h1>
-        <p>Gestión de imágenes</p>
+    <div className="add-image-page">
+      {/* Botón regresar */}
+      <div
+        className="back-container"
+        onClick={() => navigate("/gestion-imagenes")}
+      >
+        <div className="back-circle">
+          <svg viewBox="0 0 24 24">
+            <path d="M15 6l-6 6 6 6"></path>
+          </svg>
+        </div>
+        <div className="back-text">Regresar</div>
       </div>
 
-      <h2>NUEVA IMAGEN</h2>
+      <div className="add-image-container">
+        <div className="title">Agregar nueva imagen</div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-section">
-          <div className="form-group">
-            <label htmlFor="nombre">NOMBRE</label>
+        <div className="row">
+          {/* IZQUIERDA */}
+          <div className="left-section">
+            <label>Nombre de la imagen</label>
             <input
               type="text"
-              id="nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
+              className="input-text"
               placeholder="Ingresa el nombre de la imagen"
-              required
+              value={nombreImagen}
+              onChange={(e) => setNombreImagen(e.target.value)}
             />
-          </div>
 
-          <div className="etiquetas-section">
-            <div className="etiquetas-header">
-              <span>AGREGAR ETIQUETAS</span>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <input
-                  type="text"
-                  value={nuevaEtiqueta}
-                  onChange={(e) => setNuevaEtiqueta(e.target.value)}
-                  onKeyPress={(e) =>
-                    e.key === "Enter" &&
-                    (e.preventDefault(), agregarEtiqueta())
-                  }
-                  placeholder="Nueva etiqueta"
-                  style={{
-                    padding: "0.5rem",
-                    border: "1px solid #bdc3c7",
-                    borderRadius: "4px"
-                  }}
-                />
+            <div className="tags">
+              <label style={{ marginTop: 15 }}>Etiquetas</label>
+              <div className="tags-row">
+                {selectedTags.map((tag) => (
+                  <span
+                    key={tag.label}
+                    className="tag-chip"
+                    style={{ backgroundColor: tag.color }}
+                  >
+                    {tag.label}
+                  </span>
+                ))}
+
                 <button
                   type="button"
-                  onClick={agregarEtiqueta}
-                  className="btn btn-primary"
+                  className="add-tag-main"
+                  onClick={() => setIsModalOpen(true)}
                 >
-                  Agregar
+                  +
                 </button>
               </div>
             </div>
 
-            <table className="etiquetas-table">
-              <thead>
-                <tr>
-                  <th>- ETIQUETAS</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {etiquetas.map((etiqueta, index) => (
-                  <tr key={index}>
-                    <td>{etiqueta}</td>
-                    <td>
-                      <button
-                        type="button"
-                        onClick={() => eliminarEtiqueta(index)}
-                        className="btn btn-cancel"
-                        style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {etiquetas.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan="2"
-                      style={{ textAlign: "center", color: "#7f8c8d" }}
-                    >
-                      No hay etiquetas agregadas
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Sección de carga de imagen */}
-        <div
-          className="upload-section"
-          onClick={handleUploadClick}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          style={{ cursor: "pointer" }}
-        >
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            accept="image/*"
-            style={{ display: "none" }}
-          />
-
-          {imagenPreview ? (
-            <div>
-              <img
-                src={imagenPreview}
-                alt="Vista previa"
-                style={{
-                  maxWidth: "200px",
-                  maxHeight: "200px",
-                  marginBottom: "1rem",
-                  border: "2px solid #3498db",
-                  borderRadius: "4px"
-                }}
-              />
-              <p>Imagen seleccionada: {imagen.name}</p>
-              <p style={{ color: "#7f8c8d", fontSize: "0.9rem" }}>
-                Haz clic para cambiar de imagen o arrastra una nueva
-              </p>
-            </div>
-          ) : (
-            <div>
-              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📷</div>
-              <div className="upload-text">
-                <p>Haz clic para seleccionar una imagen</p>
-                <p style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>
-                  o arrastra y suelta una imagen aquí
-                </p>
+            <div className="info">
+              <div className="info-title">Información de la imagen:</div>
+              <div className="info-item">
+                <strong>Nombre:</strong> {fileInfo.nombre}
+              </div>
+              <div className="info-item">
+                <strong>Tamaño:</strong> {fileInfo.tamano}
+              </div>
+              <div className="info-item">
+                <strong>Tipo:</strong> {fileInfo.tipo}
               </div>
             </div>
-          )}
+          </div>
+
+          {/* DERECHA */}
+          <div className="right-section">
+            <div
+              className={
+                previewUrl && previewUrl !== PLACEHOLDER_PREVIEW
+                  ? "image-preview has-image"
+                  : "image-preview"
+              }
+              style={
+                previewUrl
+                  ? { backgroundImage: `url(${previewUrl})` }
+                  : undefined
+              }
+            ></div>
+
+            <button
+              type="button"
+              className="upload-btn"
+              onClick={handleFileClick}
+            >
+              Subir foto
+            </button>
+
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
+          </div>
         </div>
 
-        {/* Información de la imagen seleccionada */}
-        {imagen && (
-          <div
-            style={{
-              marginTop: "1rem",
-              padding: "1rem",
-              backgroundColor: "#ecf0f1",
-              borderRadius: "4px",
-              textAlign: "left"
-            }}
+        <div className="footer-buttons">
+          <button
+            type="button"
+            className="imgf-btn imgf-btn-cancel"
+            onClick={handleCancelar}
           >
-            <h4>Información de la imagen:</h4>
-            <p>
-              <strong>Nombre:</strong> {imagen.name}
-            </p>
-            <p>
-              <strong>Tamaño:</strong>{" "}
-              {(imagen.size / 1024 / 1024).toFixed(2)} MB
-            </p>
-            <p>
-              <strong>Tipo:</strong> {imagen.type}
-            </p>
-          </div>
-        )}
-
-        {/* Botones */}
-        <div className="button-group" style={{ marginTop: "2rem" }}>
-          <button type="button" onClick={handleCancel} className="btn btn-cancel">
             CANCELAR
           </button>
-          <button type="submit" className="btn btn-primary">
+          <button
+            type="button"
+            className="imgf-btn imgf-btn-save"
+            onClick={handleAgregar}
+          >
             AGREGAR
           </button>
         </div>
-      </form>
+      </div>
+
+      {/* MODAL DE ETIQUETAS */}
+      <ModalTags
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        selectedTags={selectedTags}
+        allTags={allTags}
+        onSave={(tags) => {
+          setSelectedTags(tags);
+          setIsModalOpen(false);
+        }}
+      />
     </div>
   );
-};
-
-export default NuevaImagen;
+}

@@ -5,7 +5,7 @@ import { NavLink } from "react-router-dom";
 const Navbar = () => {
   const menuItems = [
     { path: '/', label: 'Inicio', key: 'inicio', icon: "🏠" },
-    { path: "/nueva-imagen", label: "Nueva Imagen", icon: "➕" },
+    { path: "/gestion-imagenes", label: "Gestión de imágenes", icon: "🖼️" },
     { path: "/produccion", label: "Producción", icon: "🏭" },
     { path: "/inventario", label: "Inventario", icon: "📦" },
     { path: "/reportes", label: "Reportes", icon: "📊" },
