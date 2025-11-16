@@ -172,4 +172,57 @@ router.get("/movimientos", async (req, res) => {
   }
 });
 
+// Registrar venta de un pin
+router.post("/venta", async (req, res) => {
+  const { id_pin, cantidad, descripcion } = req.body;
+
+  if (!id_pin || !cantidad) {
+    return res.status(400).json({ error: "Datos incompletos" });
+  }
+
+  try {
+    const conn = await pool.getConnection();
+
+    // 1. Obtener stock actual
+    const [pinRows] = await conn.query(
+      "SELECT stock_actual FROM inventario_pines WHERE id_pin = ?",
+      [id_pin]
+    );
+
+    if (pinRows.length === 0) {
+      conn.release();
+      return res.status(404).json({ error: "Pin no encontrado" });
+    }
+
+    const stockActual = pinRows[0].stock_actual;
+
+    if (cantidad > stockActual) {
+      conn.release();
+      return res
+        .status(400)
+        .json({ error: "La cantidad supera el stock disponible" });
+    }
+
+    // 2. Restar stock
+    await conn.query(
+      "UPDATE inventario_pines SET stock_actual = stock_actual - ? WHERE id_pin = ?",
+      [cantidad, id_pin]
+    );
+
+    // 3. Insertar movimiento
+    await conn.query(
+      `INSERT INTO movimientos_inventario 
+       (id_pin, tipo_movimiento, cantidad, motivo, fecha) 
+       VALUES (?, "venta", ?, ?, NOW())`,
+      [id_pin, cantidad, descripcion || "Venta registrada"]
+    );
+
+    conn.release();
+    res.json({ success: true, message: "Venta registrada correctamente" });
+  } catch (error) {
+    console.error("Error registrando venta:", error);
+    res.status(500).json({ error: "Error interno al registrar venta" });
+  }
+});
+
 export default router;
