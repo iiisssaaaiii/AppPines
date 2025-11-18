@@ -114,7 +114,7 @@ export default function ModalTags({
 
   return (
     <div className="modal-bg">
-      <div className="modal">
+      <div className="modal-tag">
         {/* HEADER */}
         <div className="modal-header">
           <strong>Etiquetas</strong>
