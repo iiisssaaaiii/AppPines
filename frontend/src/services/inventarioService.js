@@ -3,12 +3,20 @@ import axios from "axios";
 
 const API_URL = "/api/inventario";
 
+// Obtener inventario de pines
 export const obtenerInventario = async () => {
-  try {
-    const response = await axios.get(API_URL);
-    return response.data; // 👈 incluye inventario y materiaPrima
-  } catch (error) {
-    console.error("Error al obtener inventario:", error);
-    throw error;
-  }
+  const response = await axios.get(`${API_URL}/pines`);
+  return response.data;
 };
+
+// Obtener materia prima
+export const obtenerMateriaPrima = async () => {
+  const response = await axios.get(`${API_URL}/materia-prima`);
+  return response.data;
+};
+
+// Registrar venta
+export async function registrarVenta(data) {
+  const res = await axios.post(`${API_URL}/venta`, data);
+  return res.data;
+}
