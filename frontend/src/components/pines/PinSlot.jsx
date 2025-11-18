@@ -2,40 +2,32 @@ import React from "react";
 import "../../styles/ProduccionPines.css";
 
 const PinSlot = ({ image, onAdd, onClickImage }) => {
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onAdd(reader.result);
-      };
-      reader.readAsDataURL(file);
+  const handleClick = () => {
+    if (image) {
+      // Si ya hay imagen, usamos la acción de click sobre imagen
+      if (onClickImage) onClickImage();
+    } else {
+      // Si está vacío, usamos la acción de agregar
+      if (onAdd) onAdd();
     }
   };
 
   return (
-    <div className="pin-slot">
+    <button
+      type="button"
+      className="pin-slot"
+      onClick={handleClick}
+    >
       {image ? (
         <img
           src={image}
           alt="pin"
           className="pin-img"
-          onClick={onClickImage} // 🔹 Ahora abre modal
         />
       ) : (
-        <>
-          <label className="btn-add">
-            +
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={handleFileChange}
-            />
-          </label>
-        </>
+        <span className="pin-slot-plus">+</span>
       )}
-    </div>
+    </button>
   );
 };
 
