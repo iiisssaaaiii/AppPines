@@ -50,6 +50,10 @@ export default function Inventario() {
   const [mostrarVenta, setMostrarVenta] = useState(false);
   const [pinParaVenta, setPinParaVenta] = useState(null);
 
+  // 🔵 ESTADOS NUEVOS PARA FILTRO
+  const [etiquetaSeleccionada, setEtiquetaSeleccionada] = useState("Todas");
+  const [dropdownAbierto, setDropdownAbierto] = useState(false);
+
   const cargarDatos = async () => {
     try {
       const dataPines = await obtenerInventario();
@@ -66,9 +70,8 @@ export default function Inventario() {
     cargarDatos();
   }, []);
 
-    const guardarCambiosPin = async (datos) => {
+  const guardarCambiosPin = async (datos) => {
     try {
-      // datos viene de EditPinModal: { tamano, precio, cantidad }
       await actualizarPin(pinSeleccionado.id_pin, datos);
       setMostrarModalEditar(false);
       setPinSeleccionado(null);
@@ -93,6 +96,26 @@ export default function Inventario() {
       alert(`❌ ${mensaje}`);
     }
   };
+
+  // 🔵 OBTENER TODAS LAS ETIQUETAS
+  const todasEtiquetas = [
+    ...new Set(
+      pines
+        .flatMap(p => p.etiquetas ? p.etiquetas.split(",") : [])
+        .map(e => e.trim())
+        .filter(e => e !== "")
+    ),
+  ];
+
+  // 🔵 FILTRADO DE PINES
+  const pinesFiltrados =
+    etiquetaSeleccionada === "Todas"
+      ? pines
+      : pines.filter(pin =>
+          pin.etiquetas?.split(",")
+            .map(t => t.trim())
+            .includes(etiquetaSeleccionada)
+        );
 
   return (
     <main className="page inventario-page">
@@ -124,18 +147,55 @@ export default function Inventario() {
               <p>Listado de pines terminados listos para venta o entrega.</p>
             </div>
 
-            <div className="filter">
+            {/* 🔵 DROPDOWN DE FILTRO */}
+            <div className="filter" style={{ position: "relative" }}>
               <span>Filtrar por etiqueta</span>
-              <div className="fake-select">
-                <span className="value">-- Todas --</span>
+
+              <div
+                className="fake-select"
+                onClick={() => setDropdownAbierto(!dropdownAbierto)}
+              >
+                <span className="value">
+                  {etiquetaSeleccionada === "Todas"
+                    ? "-- Todas --"
+                    : etiquetaSeleccionada}
+                </span>
                 <span className="caret">▾</span>
               </div>
+
+              {dropdownAbierto && (
+                <div className="dropdown">
+                  <div
+                    className="dropdown-item"
+                    onClick={() => {
+                      setEtiquetaSeleccionada("Todas");
+                      setDropdownAbierto(false);
+                    }}
+                  >
+                    Todas
+                  </div>
+
+                  {todasEtiquetas.map((tag, i) => (
+                    <div
+                      key={i}
+                      className="dropdown-item"
+                      onClick={() => {
+                        setEtiquetaSeleccionada(tag);
+                        setDropdownAbierto(false);
+                      }}
+                    >
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="pin-layout">
-            {pines.map((pin) => {
-              const estado = evaluarEstado(pin.stock_actual, 5); // umbral 5 pzs
+            {pinesFiltrados.map((pin) => {
+              const estado = evaluarEstado(pin.stock_actual, 5);
+
               const badgeClass =
                 estado === "ok"
                   ? "badge badge-ok"
@@ -195,10 +255,7 @@ export default function Inventario() {
                     </li>
                     <li>
                       <span className="label">Precio:</span>{" "}
-                      $
-                      {pin.precio != null
-                        ? Number(pin.precio).toFixed(2)
-                        : "0.00"}
+                      ${pin.precio != null ? Number(pin.precio).toFixed(2) : "0.00"}
                     </li>
                     <li>
                       <span className="label">Tiempo en stock:</span>{" "}
@@ -228,16 +285,6 @@ export default function Inventario() {
                     >
                       Modificar
                     </button>
-
-                    {/* <button
-                      className="btn btn-delete"
-                      onClick={() => {
-                        setPinSeleccionado(pin);
-                        setMostrarConfirmEliminar(true);
-                      }}
-                    >
-                      Eliminar
-                    </button> */}
                   </div>
                 </article>
               );

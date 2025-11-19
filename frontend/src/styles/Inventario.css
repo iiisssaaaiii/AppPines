@@ -516,3 +516,22 @@ body[data-theme="dark"] .inventario-page {
     align-items: flex-start;
   }
 }
+
+.dropdown {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  width: 160px;
+  margin-top: 5px;
+  border-radius: 6px;
+  z-index: 99;
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f2f2f2;
+}
