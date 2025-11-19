@@ -1,15 +1,19 @@
 // src/services/movimientosService.js
 import axios from "axios";
 
-const API_URL = "/api/inventario/movimientos";
+const API_URL = "http://localhost:4000/api/inventario/movimientos";
 
-// Obtener lista de movimientos
-export const obtenerMovimientos = async () => {
+export const obtenerMovimientos = async (params = {}) => {
   try {
-    const response = await axios.get(API_URL);
-    return response.data;
+    // Construir query string dinámico
+    const query = new URLSearchParams(params).toString();
+    const url = query ? `${API_URL}?${query}` : API_URL;
+
+    const res = await axios.get(url);
+    return res.data;
+
   } catch (error) {
-    console.error("Error obteniendo movimientos:", error);
+    console.error("❌ Error obteniendo movimientos:", error);
     throw error;
   }
 };

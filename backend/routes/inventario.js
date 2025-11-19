@@ -178,7 +178,9 @@ router.post("/movimientos", async (req, res) => {
 ------------------------------------------------------------------ */
 router.get("/movimientos", async (req, res) => {
   try {
-    const [rows] = await db.query(`
+    const { fecha_inicio, fecha_fin, tamano, tipo } = req.query;
+
+    let query = `
       SELECT 
         m.id_movimiento, 
         m.id_pin, 
@@ -188,18 +190,103 @@ router.get("/movimientos", async (req, res) => {
         m.motivo, 
         m.fecha_movimiento, 
         m.id_usuario,
-        CONCAT(img.ruta, img.archivo) AS url_imagen
+        p.etiquetas
       FROM movimientos_inventario m
       JOIN pines p ON m.id_pin = p.id_pin
-      JOIN imagenes img ON p.id_imagen = img.id_imagen
-      ORDER BY m.fecha_movimiento DESC
-    `);
+      WHERE 1 = 1
+    `;
+
+    const params = [];
+
+    if (fecha_inicio && fecha_fin) {
+      query += " AND DATE(m.fecha_movimiento) BETWEEN ? AND ? ";
+      params.push(fecha_inicio, fecha_fin);
+    }
+
+    if (tamano) {
+      query += " AND p.tamano = ? ";
+      params.push(tamano);
+    }
+
+    if (tipo) {
+      query += " AND m.tipo = ? ";
+      params.push(tipo);
+    }
+
+    query += " ORDER BY m.fecha_movimiento DESC;";
+
+    const [rows] = await db.query(query, params);
     res.json(rows);
+
   } catch (error) {
-    console.error("❌ Error obteniendo movimientos:", error.message);
+    console.error("❌ Error obteniendo movimientos filtrados:", error.message);
     res.status(500).json({ error: "Error al obtener movimientos" });
   }
 });
+
+
+/* ------- ENDPOINT PARA OBTENER CATERGORIAS MAS VENDIDAS PARA EL AREA DE REPORTE ------
+-----*/
+// 📊 CATEGORÍAS (ETIQUETAS) DE PINES MÁS VENDIDAS
+// GET /api/inventario/reportes/categorias?fecha_inicio=YYYY-MM-DD&fecha_fin=YYYY-MM-DD
+// 📊 Categorías de pines más vendidas
+// 📊 Categorías (etiquetas) de pines más vendidas
+router.get("/reportes/categorias", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        t.nombre AS categoria,
+        SUM(vt.cantidad) AS total_vendidos
+      FROM venta_tags vt
+      JOIN tags t ON t.id_tag = vt.id_tag
+      GROUP BY vt.id_tag
+      ORDER BY total_vendidos DESC;
+    `);
+
+    res.json(rows);
+  } catch (error) {
+    console.error("❌ Error obteniendo categorías más vendidas:", error);
+    res.status(500).json({ error: "Error al obtener categorías más vendidas" });
+  }
+});
+
+// 📊 REPORTE DE VENTAS (por rango de fechas opcional)
+router.get("/reportes/ventas", async (req, res) => {
+  try {
+    const { fecha_inicio, fecha_fin } = req.query;
+
+    let sql = `
+      SELECT 
+        v.id_venta,
+        v.fecha,
+        v.total,
+        u.nombre AS usuario,
+        IFNULL(SUM(d.cantidad), 0) AS total_pines
+      FROM ventas v
+      LEFT JOIN venta_detalle d ON v.id_venta = d.id_venta
+      LEFT JOIN usuarios u ON v.id_usuario = u.id_usuario
+    `;
+
+    const params = [];
+
+    if (fecha_inicio && fecha_fin) {
+      sql += " WHERE DATE(v.fecha) BETWEEN ? AND ? ";
+      params.push(fecha_inicio, fecha_fin);
+    }
+
+    sql += `
+      GROUP BY v.id_venta
+      ORDER BY v.fecha DESC
+    `;
+
+    const [rows] = await db.query(sql, params);
+    res.json(rows);
+  } catch (error) {
+    console.error("❌ Error obteniendo ventas:", error.message);
+    res.status(500).json({ error: "Error al obtener ventas" });
+  }
+});
+
 
 /* ------------------------------------------------------------------
    🧾 REGISTRAR VENTA DE UN PIN

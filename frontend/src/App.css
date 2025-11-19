@@ -1,15 +1,18 @@
+/* =========================================================
+   APP GENERAL
+   ========================================================= */
 .App {
   min-height: 100vh;
   background-color: #f5f5f5;
 }
 
 .App-main:has(.inventario-page) {
-  /* max-width: 100%;
-  margin: 0; */
   padding: 0;
 }
 
-/* Navbar Styles */
+/* =========================================================
+   NAVBAR
+   ========================================================= */
 .navbar {
   background-color: #2c3e50;
   padding: 1rem 0;
@@ -45,16 +48,20 @@
   font-weight: bold;
 }
 
-/* Main Content Styles */
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
 .App-main {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
 
-/* Page Header - MISMO COLOR AZUL QUE NAVBAR */
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
 .page-header {
-  background-color: #2c3e50; /* Mismo color que el navbar */
+  background-color: #2c3e50;
   color: white;
   padding: 2rem;
   border-radius: 8px;
@@ -69,15 +76,14 @@
 }
 
 .page-header p {
-  color: #ecf0f1; /* Color más claro para el subtítulo */
+  color: #ecf0f1;
   font-size: 1.1rem;
   opacity: 0.9;
 }
 
-/* ============================
-   Nueva Imagen Page Styles
-   ============================ */
-
+/* =========================================================
+   NUEVA IMAGEN
+   ========================================================= */
 .nueva-imagen-container {
   background-color: white;
   padding: 2rem;
@@ -93,14 +99,9 @@
   font-size: 1.5rem;
 }
 
-.form-section {
-  margin-bottom: 2rem;
-}
+.form-section { margin-bottom: 2rem; }
 
-.form-group {
-  margin-bottom: 1.5rem;
-  text-align: left;
-}
+.form-group { margin-bottom: 1.5rem; text-align: left; }
 
 .form-group label {
   display: block;
@@ -122,14 +123,13 @@
   border-color: #3498db;
 }
 
-/* Asegurar que el formulario ocupe todo el espacio disponible */
 .nueva-imagen-container form {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
 }
 
-/* Etiquetas Section */
+/* Tabla etiquetas */
 .etiquetas-section {
   border: 2px solid #bdc3c7;
   border-radius: 4px;
@@ -169,7 +169,7 @@
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
-  margin-top: auto;            /* Empuja los botones hacia abajo en formularios largos */
+  margin-top: auto;
   padding-top: 2rem;
   border-top: 1px solid #ecf0f1;
 }
@@ -188,20 +188,16 @@
   color: white;
 }
 
-.btn-cancel:hover {
-  background-color: #7f8c8d;
-}
+.btn-cancel:hover { background-color: #7f8c8d; }
 
 .btn-primary {
   background-color: #3498db;
   color: white;
 }
 
-.btn-primary:hover {
-  background-color: #2980b9;
-}
+.btn-primary:hover { background-color: #2980b9; }
 
-/* Upload Section */
+/* Upload */
 .upload-section {
   border: 2px dashed #bdc3c7;
   border-radius: 4px;
@@ -212,19 +208,16 @@
   transition: border-color 0.3s;
 }
 
-.upload-section:hover {
-  border-color: #3498db;
-}
+.upload-section:hover { border-color: #3498db; }
 
 .upload-text {
   color: #7f8c8d;
   font-size: 1.1rem;
 }
 
-/* ============================
-   Módulo Page Styles
-   ============================ */
-
+/* =========================================================
+   MODULOS
+   ========================================================= */
 .modulo-page {
   background-color: white;
   padding: 3rem;
@@ -232,20 +225,10 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.modulo-page h1 {
-  color: #2c3e50;
-  margin-bottom: 1rem;
-}
+.modulo-page h1 { color: #2c3e50; margin-bottom: 1rem; }
+.modulo-page p { color:#7f8c8d; font-size:1.2rem; }
 
-.modulo-page p {
-  color: #7f8c8d;
-  font-size: 1.2rem;
-}
-
-/* ============================
-   Modal genérico reutilizable
-   ============================ */
-
+/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -272,57 +255,23 @@
   gap: 10px;
 }
 
-/* Formularios reutilizables (para modales, etc.) */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-
-.form-col {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.form-label {
-  font-weight: 600;
-  font-size: .95rem;
-}
-
-.form-input {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: .95rem;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #3498db;
-}
-
-/* ============================
-   Catálogo / Tablas generales
-   ============================ */
-
-/* Contenedor general */
+/* =========================================================
+   CATÁLOGO
+   ========================================================= */
 .page-container {
   padding: 2rem;
   max-width: 1000px;
   margin: auto;
 }
 
-/* Título genérico de sección */
 .section-title {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #1e3a8a; /* azul oscuro */
+  color: #1e3a8a;
   margin-bottom: 1.5rem;
   text-align: center;
 }
 
-/* Tabla genérica */
 .table-wrapper {
   overflow-x: auto;
   border-radius: 12px;
@@ -349,12 +298,9 @@
   border-top: 1px solid #e2e8f0;
 }
 
-/* Filas alternadas */
-.catalogo-table tbody tr:nth-child(even) {
-  background-color: #f8fafc;
-}
+.catalogo-table tbody tr:nth-child(even) { background-color: #f8fafc; }
 
-/* Imagen pequeña de pin */
+/* pin preview */
 .pin-preview {
   width: 70px;
   height: 70px;
@@ -363,7 +309,6 @@
   border: 1px solid #cbd5e1;
 }
 
-/* Estado vacío genérico */
 .empty-state {
   text-align: center;
   padding: 2rem;
@@ -371,19 +316,175 @@
   color: #64748b;
 }
 
-/* ============================
-   Pantalla de Inicio
-   ============================ */
+/* =========================================================
+   INICIO
+   ========================================================= */
+.App-inicio { background-color: var(--color-bg); }
 
-/* 🔹 Layout especial para la pantalla de Inicio */
-.App-inicio {
-  /* que el fondo use las variables de tema (claro/oscuro) */
-  background-color: var(--color-bg);
-}
-
-/* El main de inicio no debe limitarse a 1200px ni tener padding */
 .inicio-main {
   max-width: 100%;
   margin: 0;
   padding: 0;
+}
+
+/* =========================================================
+   REPORTES (AISLADO PARA NO AFECTAR INVENTARIO)
+   ========================================================= */
+
+.reportes-container {
+  padding: 40px;
+  font-family: 'Arial', sans-serif;
+}
+
+.reportes-container .titulo {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 40px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.reportes-container .reportes-contenido {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+}
+
+/* PANEL IZQUIERDO */
+.reportes-container .panel-filtros {
+  width: 320px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.reportes-container .panel-filtros h2 {
+  font-size: 15px;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.reportes-container .label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.reportes-container .input,
+.reportes-container .select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid #bdc3c7;
+  margin-bottom: 5px;
+  font-size: 0.95rem;
+}
+
+.reportes-container .input:focus,
+.reportes-container .select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.reportes-container .btn-buscar {
+  width: 100%;
+  margin-top: 15px;
+  background: #0000ff;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.reportes-container .btn-buscar:hover {
+  background: #0000cc;
+}
+
+/* PANEL DERECHO */
+.reportes-container .panel-reporte {
+  flex: 1;
+  padding: 20px;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  min-height: 450px;
+  background: white;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+  position: relative;
+}
+
+.reportes-container .subtitulo {
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.reportes-container .tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 25px;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.reportes-container .tabla th {
+  background: #e0f2fe;
+  color: #0c4a6e;
+  padding: 10px;
+  border-bottom: 2px solid #bae6fd;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.reportes-container .tabla td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.reportes-container .tabla tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+/* BOTÓN PDF */
+.reportes-container .btn-pdf {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  background: #0000ff;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 20px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.reportes-container .btn-pdf:hover {
+  background: #0000cc;
+}
+
+.reportes-container .grafica-contenedor {
+  background: #ffffff;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.reportes-container .grafica-titulo {
+  text-align: center;
+  font-size: 1.4rem;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #1e3a8a;
 }

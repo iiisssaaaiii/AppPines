@@ -5,6 +5,7 @@ import inventarioRoutes from "./routes/inventario.js";
 import produccionRoutes from "./routes/produccion.js";
 import pinesRoutes from "./routes/pines.js";
 import catalogoRoutes from "./routes/catalogo.js";
+import reportesRoutes from "./routes/reportes.js";
 // import ventasRoutes from "./routes/ventas.js";  // Importa las rutas de ventas
 
 // ⭐ NUEVA RUTA PARA IMÁGENES
