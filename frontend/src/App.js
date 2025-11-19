@@ -5,22 +5,16 @@ import "./App.css";
 
 // Páginas
 import Inicio from "./pages/Inicio";
+import GestionImagenes from "./pages/GestionImagenes";
 import NuevaImagen from "./pages/NuevaImagen";
+import EditarImagen from "./pages/EditarImagen";
 import ProduccionPines from "./pages/ProduccionPines";
 import Inventario from "./pages/Inventario";
 import Reportes from "./pages/Reportes";
 import Catalogo from "./pages/Catalogo";
-import Ventas from "./pages/Ventas";
 
 // Componentes
 import Navbar from "./components/Navbar";
-
-const Administracion = () => (
-  <div className="modulo-page">
-    <h1>⚙️ Administración</h1>
-    <p>Módulo en desarrollo - Próximamente</p>
-  </div>
-);
 
 // ✅ Envolvemos las rutas en un componente para poder usar `useLocation`
 function AppContent() {
@@ -37,12 +31,13 @@ function AppContent() {
       <main className={isInicio ? "App-main inicio-main" : "App-main"}>
         <Routes>
           <Route path="/" element={<Inicio />} />
+          <Route path="/inventario" element={<Inventario />} />
+          <Route path="/gestion-imagenes" element={<GestionImagenes />} />
+          <Route path="/editar-imagen/:id" element={<EditarImagen />} />
           <Route path="/nueva-imagen" element={<NuevaImagen />} />
           <Route path="/produccion" element={<ProduccionPines />} />
           <Route path="/inventario" element={<Inventario />} />
-          <Route path="/ventas" element={<Ventas />} />
           <Route path="/reportes" element={<Reportes />} />
-          <Route path="/administracion" element={<Administracion />} />
           <Route path="/catalogo" element={<Catalogo />} />
         </Routes>
       </main>

@@ -1,79 +1,198 @@
-import React, { useState } from 'react';
-import '../styles/GestionImagenes.css';
-import NuevaImagenModal from '../components/gestion-imagenes/NuevaImagenModal';
+import React, { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/GestionImagenes.css";
+import { obtenerImagenes, eliminarImagen } from "../services/imagenesService";
 
-const GestionImagenes = () => {
-  const [showModal, setShowModal] = useState(false);
+const PLACEHOLDER_IMG = "https://i.imgur.com/EPhuF5p.png";
+
+// --------------------------------------------------
+// Función para construir la URL real de la imagen
+// --------------------------------------------------
+function construirUrlImagen(img) {
+  if (img.url) return img.url; 
+  if (img.ruta && img.archivo) return `${img.ruta}${img.archivo}`;
+  if (img.archivo) return `/uploads/${img.archivo}`;
+  return PLACEHOLDER_IMG;
+}
+
+// --------------------------------------------------
+// Extraer tags correctamente del objeto que devuelve el backend
+// --------------------------------------------------
+function extraerTags(img) {
+  // Formato correcto: tags = [{label, color}, ...]
+  if (Array.isArray(img.tags)) return img.tags;
+
+  // Compatibilidad con sistemas viejos (no aplica pero por si acaso)
+  if (img.tags_csv) {
+    return img.tags_csv
+      .split(",")
+      .map((t) => ({
+        label: t.trim(),
+        color: "#243b53",
+      }))
+      .filter((t) => t.label !== "");
+  }
+
+  return [];
+}
+
+// --------------------------------------------------
+// Componente principal
+// --------------------------------------------------
+export default function GestionImagenes() {
   const [imagenes, setImagenes] = useState([]);
+  const [tagFiltro, setTagFiltro] = useState("todos");
+  const navigate = useNavigate();
 
-  // Datos de ejemplo para las imágenes
-  const imagenesEjemplo = [
-    { id: 1, nombre: 'Diseño 1', etiquetas: ['animales', 'colorido'], url: '/placeholder1.jpg' },
-    { id: 2, nombre: 'Diseño 2', etiquetas: ['abstracto', 'moderno'], url: '/placeholder2.jpg' },
-    { id: 3, nombre: 'Diseño 3', etiquetas: ['texto', 'minimalista'], url: '/placeholder3.jpg' },
-  ];
-
-  const agregarImagen = (nuevaImagen) => {
-    setImagenes([...imagenes, { ...nuevaImagen, id: Date.now() }]);
-    setShowModal(false);
+  // --------------------------------------------------
+  // Cargar imágenes desde backend
+  // --------------------------------------------------
+  const cargarImagenes = async () => {
+    try {
+      const data = await obtenerImagenes();
+      console.log("IMÁGENES RECIBIDAS DESDE BACKEND:", data);
+      setImagenes(data);
+    } catch (error) {
+      console.error("Error al cargar imágenes:", error);
+    }
   };
 
-  return (
-    <div className="gestion-imagenes-container">
-      {/* Header */}
-      <header className="ges-header">
-        <h1># Tienda de Pines</h1>
-        <nav className="ges-nav">
-          <button className="nav-btn active">Gestión de imágenes</button>
-          <button className="nav-btn">Producción de pines</button>
-          <button className="nav-btn">Inventario de pines</button>
-          <button className="nav-btn">Ventas</button>
-          <button className="nav-btn">Reportes</button>
-          <button className="nav-btn">Administración</button>
-        </nav>
-      </header>
+  useEffect(() => {
+    cargarImagenes();
+  }, []);
 
-      {/* Contenido Principal */}
-      <main className="ges-main">
-        {/* Botón Nueva Imagen */}
-        <div className="nueva-imagen-section">
-          <button 
-            className="btn-nueva-imagen"
-            onClick={() => setShowModal(true)}
+  // --------------------------------------------------
+  // Obtener lista única de etiquetas para el filtro
+  // --------------------------------------------------
+  const tagsDisponibles = useMemo(() => {
+    const set = new Set();
+    imagenes.forEach((img) => {
+      extraerTags(img).forEach((tag) => set.add(tag.label));
+    });
+    return Array.from(set);
+  }, [imagenes]);
+
+  console.log("Imagenes recibidas:", imagenes);
+
+  // --------------------------------------------------
+  // Filtrar imágenes por etiqueta seleccionada
+  // --------------------------------------------------
+  const listaFiltrada = useMemo(() => {
+    if (tagFiltro === "todos") return imagenes;
+
+    return imagenes.filter((img) =>
+      extraerTags(img).some((tag) => tag.label === tagFiltro)
+    );
+  }, [imagenes, tagFiltro]);
+
+  // --------------------------------------------------
+  // Eliminar imagen
+  // --------------------------------------------------
+  const handleEliminar = async (id_imagen) => {
+    if (!window.confirm("¿Seguro que deseas eliminar esta imagen?")) return;
+    try {
+      await eliminarImagen(id_imagen);
+      await cargarImagenes();
+    } catch (error) {
+      console.error("Error eliminando imagen:", error);
+    }
+  };
+
+  // --------------------------------------------------
+  // Render
+  // --------------------------------------------------
+  return (
+    <div className="gestion-page">
+      <div className="gestion-container">
+        <h2>IMÁGENES GUARDADAS</h2>
+
+        <div className="top-actions">
+          {/* FILTRO */}
+          <div>
+            <label className="label-filter">FILTRAR POR:</label>
+
+            <div className="select-wrapper">
+              <select
+                value={tagFiltro}
+                onChange={(e) => setTagFiltro(e.target.value)}
+              >
+                <option value="todos">-- TODAS LAS ETIQUETAS --</option>
+
+                {tagsDisponibles.map((tag) => (
+                  <option key={tag} value={tag}>
+                    {tag}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* BOTÓN AGREGAR */}
+          <button
+            className="btn-agregar"
+            onClick={() => navigate("/nueva-imagen")}
           >
-            + NUEVA IMAGEN
+            AGREGAR
           </button>
         </div>
 
-        {/* Grid de Imágenes */}
-        <div className="imagenes-grid">
-          {imagenesEjemplo.map(imagen => (
-            <div key={imagen.id} className="imagen-card">
-              <div className="imagen-preview">
-                <img src={imagen.url} alt={imagen.nombre} />
-              </div>
-              <div className="imagen-info">
-                <h3>{imagen.nombre}</h3>
-                <div className="etiquetas-container">
-                  {imagen.etiquetas.map((etiqueta, index) => (
-                    <span key={index} className="etiqueta-chip">{etiqueta}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </main>
+        {/* GRID */}
+        {listaFiltrada.length === 0 ? (
+          <p className="empty-state">
+            No hay imágenes guardadas todavía o no hay resultados para este filtro.
+          </p>
+        ) : (
+          <div className="grid">
+            {listaFiltrada.map((img) => {
+              const url = construirUrlImagen(img);
+              const tags = extraerTags(img);
 
-      {/* Modal Nueva Imagen */}
-      {showModal && (
-        <NuevaImagenModal 
-          onClose={() => setShowModal(false)}
-          onAgregar={agregarImagen}
-        />
-      )}
+              return (
+                <div className="card" key={img.id_imagen}>
+                  {/* PREVIEW */}
+                  <div
+                    className="image-preview-gi"
+                    style={{ backgroundImage: `url(${url})` }}
+                  />
+
+                  {/* NOMBRE */}
+                  <p>Nombre: {img.nombre}</p>
+
+                  {/* TAGS */}
+                  {tags.length > 0 && (
+                    <div className="tag-container">
+                      {tags.map((tag) => (
+                        <span
+                          key={tag.label}
+                          className="tag"
+                          style={{ backgroundColor: tag.color }}
+                        >
+                          {tag.label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* BOTONES */}
+                  <button
+                    className="btn-modif"
+                    onClick={() => navigate(`/editar-imagen/${img.id_imagen}`)}
+                  >
+                    Modificar
+                  </button>
+
+                  <button
+                    className="btn-elim"
+                    onClick={() => handleEliminar(img.id_imagen)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
-};
-
-export default GestionImagenes;
+}
