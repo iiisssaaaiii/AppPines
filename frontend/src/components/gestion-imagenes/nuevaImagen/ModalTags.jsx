@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-// Ajusta esta ruta según dónde esté tu componente:
 import "../../../styles/NuevaImagen.css";
 
 const DEFAULT_COLOR = "#243b53";
@@ -40,26 +39,50 @@ export default function ModalTags({
       setCurrentColor(DEFAULT_COLOR);
       setShowPopover(false);
 
-      const selectedSet = new Set(selectedTags.map((t) => t.label));
+      const safeSelected = Array.isArray(selectedTags) ? selectedTags : [];
+      const safeAll = Array.isArray(allTags) ? allTags : [];
 
-      setSelected(selectedTags);
+      const selectedSet = new Set(
+        safeSelected
+          .filter((t) => t && t.label) // quitamos nulls
+          .map((t) => t.label)
+      );
 
-      const otherList = allTags.filter((t) => !selectedSet.has(t.label));
+      setSelected(
+        safeSelected.filter((t) => t && t.label) // limpiamos
+      );
+
+      const otherList = safeAll.filter(
+        (t) => t && t.label && !selectedSet.has(t.label)
+      );
       setOthers(otherList);
     }
   }, [open, selectedTags, allTags]);
 
-  const filtered = (list) =>
-    list.filter((tag) =>
-      tag.label.toLowerCase().includes(search.toLowerCase())
-    );
+  // 🔍 función de filtrado a prueba de nulls
+  const filtrarLista = (lista) => {
+    const textoBusqueda = (search || "").toLowerCase();
+
+    if (!Array.isArray(lista)) return [];
+
+    return lista
+      .filter((t) => t && (t.label || t.nombre)) // quitamos nulls
+      .filter((tag) => {
+        const nombre = (tag.label || tag.nombre || "").toLowerCase();
+        return nombre.includes(textoBusqueda);
+      });
+  };
 
   const agregarEtiqueta = () => {
     if (!newTag.trim()) return;
 
+    const nombreNuevo = newTag.trim().toLowerCase();
+
     const existe =
-      selected.some((t) => t.label.toLowerCase() === newTag.toLowerCase()) ||
-      others.some((t) => t.label.toLowerCase() === newTag.toLowerCase());
+      selected.some(
+        (t) => (t.label || "").toLowerCase() === nombreNuevo
+      ) ||
+      others.some((t) => (t.label || "").toLowerCase() === nombreNuevo);
 
     if (existe) {
       alert("Ya existe una etiqueta con ese nombre");
@@ -76,12 +99,12 @@ export default function ModalTags({
   };
 
   const moverASeleccionadas = (tag) => {
-    setOthers(others.filter((t) => t.label !== tag.label));
+    setOthers(others.filter((t) => t && t.label !== tag.label));
     setSelected([...selected, tag]);
   };
 
   const moverAOtras = (tag) => {
-    setSelected(selected.filter((t) => t.label !== tag.label));
+    setSelected(selected.filter((t) => t && t.label !== tag.label));
     setOthers([...others, tag]);
   };
 
@@ -111,6 +134,9 @@ export default function ModalTags({
   };
 
   if (!open) return null;
+
+  const seleccionadasFiltradas = filtrarLista(selected);
+  const otrasFiltradas = filtrarLista(others);
 
   return (
     <div className="modal-bg">
@@ -165,7 +191,7 @@ export default function ModalTags({
         <hr className="hr-line" />
 
         <div id="modal-selected">
-          {filtered(selected).map((tag) => (
+          {seleccionadasFiltradas.map((tag) => (
             <span
               key={tag.label}
               className="tag-option"
@@ -175,7 +201,7 @@ export default function ModalTags({
               {tag.label}
             </span>
           ))}
-          {filtered(selected).length === 0 && (
+          {seleccionadasFiltradas.length === 0 && (
             <p style={{ fontSize: 14, color: "#777" }}>Sin etiquetas</p>
           )}
         </div>
@@ -187,7 +213,7 @@ export default function ModalTags({
         <hr className="hr-line" />
 
         <div id="modal-other">
-          {filtered(others).map((tag) => (
+          {otrasFiltradas.map((tag) => (
             <span
               key={tag.label}
               className="tag-option"
@@ -197,7 +223,7 @@ export default function ModalTags({
               {tag.label}
             </span>
           ))}
-          {filtered(others).length === 0 && (
+          {otrasFiltradas.length === 0 && (
             <p style={{ fontSize: 14, color: "#777" }}>
               No hay más etiquetas
             </p>
@@ -252,7 +278,6 @@ export default function ModalTags({
             </div>
           </div>
 
-          {/* input oculto para color personalizado */}
           <input
             type="color"
             ref={colorInputRef}
