@@ -1,0 +1,518 @@
+.inventario-page * {
+  box-sizing: content-box;
+  padding: 0;
+}
+
+.inventario-page {
+  /* Variables de color solo para esta página */
+  --page-bg: #f3f5fa;
+  --card-bg: #ffffff;
+  --text-main: #111827;
+  --text-title: #1e3a8a;
+  --text-muted: #6b7280;
+  --border-soft: #e5e7eb;
+
+  --nav-bg: #1f3b57;
+  --nav-link: #dbe5f5;
+  --nav-link-active-bg: #2f80ed;
+
+  --btn-blue: #3498db;
+  --btn-green: #0caa75;
+  --btn-red: #e74c3c;
+
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--page-bg);
+  color: var(--text-main);
+  padding: 24px 16px 40px;
+  text-align: left;              /* Rompe el text-align heredado */
+}
+
+/* Reset solo dentro de inventario (si quieres usarlo) */
+.inventario-page * {
+  box-sizing: border-box;
+}
+
+/* Modo oscuro solo dentro de Inventario */
+body[data-theme="dark"] .inventario-page {
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --text-main: #f1f5f9;
+  --text-title: #60a5fa;
+  --text-muted: #94a3b8;
+  --border-soft: #334155;
+}
+
+/* RESET interno: solo afecta al contenido de Inventario */
+.inventario-page * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =======================
+   SECCIÓN GENERAL
+   ======================= */
+
+.inventario-page .page-title {
+  max-width: 1150px;
+  margin: 0 auto 14px;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-title);
+}
+
+.inventario-page .app {
+  max-width: 1150px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+  padding: 20px 24px 60px;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* =======================
+   PESTAÑAS (TABS)
+   ======================= */
+
+.inventario-page .tabs {
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 16px;
+}
+
+.inventario-page .tab-btn {
+  border: none;
+  background: transparent;
+  padding: 9px 18px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 14px 14px 0 0;
+  margin-bottom: -1px;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.inventario-page .tab-btn:hover {
+  color: var(--text-main);
+}
+
+.inventario-page .tab-btn.active {
+  color: var(--text-main);
+  border: 2.5px solid var(--nav-bg);
+  border-bottom-color: var(--card-bg);
+  background: var(--card-bg);
+}
+
+/* Paneles */
+.inventario-page .tab-panel {
+  display: none;
+}
+
+.inventario-page .tab-panel.active {
+  display: block;
+}
+
+/* =======================
+   ENCABEZADOS
+   ======================= */
+
+.inventario-page .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.inventario-page .panel-header h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-title);
+}
+
+.inventario-page .panel-header p {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+}
+
+/* =======================
+   FILTRO DE ETIQUETAS
+   ======================= */
+
+.inventario-page .filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.inventario-page .fake-select {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 7px 14px;
+  border: 2px solid #d7deea;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.16);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: default;
+}
+
+.inventario-page .fake-select .value {
+  font-size: 0.85rem;
+}
+
+.inventario-page .fake-select .caret {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* =======================
+   GRID DE CARDS DE PINES
+   ======================= */
+
+.inventario-page .pin-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Card individual */
+.inventario-page .pin-card {
+  background: var(--card-bg);
+  border-radius: 22px;
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.18);
+  width: 330px;
+  max-width: 100%;
+  padding: 18px 18px 16px;
+  margin-left: 18px;
+}
+
+.inventario-page .pin-image-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.inventario-page .pin-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  border: 4px solid #edf2ff;
+  object-fit: cover;
+  background: #dbe4ff;
+}
+
+.inventario-page .pin-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+/* Texto */
+.inventario-page .pin-name {
+  font-size: 0.98rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* Estado badge */
+.inventario-page .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.inventario-page .badge-ok {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.inventario-page .badge-warn {
+  background: #fef9c3;
+  color: #92400e;
+}
+
+.inventario-page .badge-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Tags */
+.inventario-page .pin-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.inventario-page .tag-chip {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.inventario-page .tag-navy {
+  background: #243b53;
+}
+
+.inventario-page .tag-blue {
+  background: #2563eb;
+}
+
+.inventario-page .tag-purple {
+  background: #7c3aed;
+}
+
+/* Meta */
+.inventario-page .pin-meta {
+  list-style: none;
+  font-size: 0.86rem;
+  margin-bottom: 12px;
+}
+
+.inventario-page .pin-meta .label {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* =======================
+   ACCIONES
+   ======================= */
+
+.inventario-page .pin-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.inventario-page .btn {
+  border: none;
+  border-radius: 12px;
+  padding: 15px 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #ffffff;
+  width: 100%;
+  transition: filter 0.16s ease, transform 0.08s ease;
+}
+
+.inventario-page .btn-sale {
+  background: var(--btn-green);
+}
+
+.inventario-page .btn-edit {
+  background: var(--btn-blue);
+}
+
+.inventario-page .btn-delete {
+  background: var(--btn-red);
+}
+
+.inventario-page .btn:hover {
+  filter: brightness(1.05);
+}
+
+.inventario-page .btn:active {
+  transform: scale(0.98);
+}
+
+/* Botón "Agregar" de materia prima */
+.inventario-page .btn-add {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--btn-blue);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: filter 0.16s ease, transform 0.08s ease;
+}
+
+.inventario-page .btn-add:hover {
+  filter: brightness(1.08);
+}
+
+.inventario-page .btn-add:active {
+  transform: scale(0.97);
+}
+
+/* =======================
+   TABLA MATERIA PRIMA
+   ======================= */
+
+.inventario-page .table-wrapper {
+  margin-top: 2px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18);
+}
+
+.inventario-page table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.inventario-page thead {
+  background: #eef2ff;
+}
+
+.inventario-page th,
+.inventario-page td {
+  padding: 9px 16px;
+  text-align: left;
+}
+
+.inventario-page tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.inventario-page tbody tr:hover {
+  background: #eef2ff;
+}
+
+.inventario-page .numeric {
+  text-align: right;
+}
+
+.inventario-page .actions-cell {
+  text-align: center;
+}
+
+.inventario-page .icon-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.inventario-page .icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.05rem;
+  padding: 3px 5px;
+  border-radius: 999px;
+  transition: background-color 0.16s ease, transform 0.08s ease;
+}
+
+.inventario-page .icon-btn:hover {
+  background: #e5e7eb;
+}
+
+.inventario-page .icon-btn:active {
+  transform: scale(0.96);
+}
+
+/* =======================
+   MODAL REGISTRAR / EDITAR
+   ======================= */
+
+.inventario-page .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.inventario-page .modal {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  width: 400px;
+}
+
+.inventario-page .modal h2 {
+  margin-bottom: 10px;
+  color: var(--text-title);
+}
+
+.inventario-page .modal-label {
+  font-weight: 600;
+  margin-top: 10px;
+  display: block;
+}
+
+.inventario-page .modal-input,
+.inventario-page .modal-textarea {
+  width: 100%;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  background: var(--card-bg);
+  color: var(--text-main);
+}
+
+.inventario-page .modal-textarea {
+  height: 60px;
+  resize: none;
+}
+
+.inventario-page .error-text {
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+.inventario-page .modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Caja del total calculado */
+.inventario-page .venta-total-box {
+  background: var(--page-bg);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 10px 0;
+  border: 1px solid var(--border-soft);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* =======================
+   RESPONSIVE
+   ======================= */
+
+@media (max-width: 840px) {
+  .inventario-page .pin-card {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .inventario-page .panel-header {
+    align-items: flex-start;
+  }
+}

@@ -1,15 +1,15 @@
 // src/components/Navbar.jsx
 import React from "react";
 import { NavLink } from "react-router-dom";
+import "../App.css";
 
 const Navbar = () => {
   const menuItems = [
-    { path: "/", label: "Nueva Imagen", icon: "➕" },
+    { path: '/', label: 'Inicio', key: 'inicio', icon: "🏠" },
+    { path: "/gestion-imagenes", label: "Gestión de imágenes", icon: "🖼️" },
     { path: "/produccion", label: "Producción", icon: "🏭" },
     { path: "/inventario", label: "Inventario", icon: "📦" },
-    { path: "/ventas", label: "Ventas", icon: "💰" },
     { path: "/reportes", label: "Reportes", icon: "📊" },
-    { path: "/administracion", label: "Administración", icon: "⚙️" },
     { path: "/catalogo", label: "Catálogo", icon: "📔"}
   ];
 

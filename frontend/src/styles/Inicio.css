@@ -1,0 +1,204 @@
+/* ============================
+   VARIABLES BASE
+============================ */
+:root {
+  --color-bg: #f4f4f4;
+  --color-card-bg: #ffffff;
+  --color-primary: #2c3e50;
+  --color-accent: #385f86;
+  --color-text: #222;
+  --color-text-muted: #666;
+}
+
+[data-theme="dark"] {
+  --color-bg: #1e1e1e;
+  --color-card-bg: #2c2c2c;
+  --color-primary: #1b2838;
+  --color-accent: #4a6fa3;
+  --color-text: #e0e0e0;
+  --color-text-muted: #bdbdbd;
+}
+
+/* Transiciones suaves solo de color (sin afectar layout) */
+* {
+  transition: background-color 0.28s ease, 
+              color 0.28s ease,
+              border-color 0.28s ease;
+}
+
+/* ============================
+   CONTENEDOR PRINCIPAL
+============================ */
+
+.inicio-body {
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* ============================
+   HEADER
+============================ */
+
+.inicio-header {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-section img {
+  height: 48px;
+  width: 48px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.inicio-header h1 {
+  margin: 0;
+  font-size: 1.6em;
+  font-weight: 600;
+}
+
+.theme-toggle {
+  background: none;
+  border: 2px solid white;
+  color: white;
+  border-radius: 25px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.25s ease;
+}
+
+.theme-toggle:hover {
+  background: white;
+  color: var(--color-primary);
+  transform: scale(1.1);
+}
+
+/* ============================
+   BIENVENIDA
+============================ */
+
+/* Nueva animación SIMPLE para evitar parpadeos */
+@keyframes fadeSimple {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.welcome-container {
+  width: 90%;
+  max-width: 1180px;
+  margin: 0 auto 10px auto;
+  padding: 20px 0 0 0;
+  animation: fadeSimple 0.35s ease;
+  text-align: left;
+}
+
+.welcome-container h2 {
+  font-size: 1.9em;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.welcome-container p {
+  font-size: 1.05em;
+  margin-top: 5px;
+  color: var(--color-text-muted);
+}
+
+/* ============================
+   TARJETAS
+============================ */
+
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 20px 2%;
+}
+
+.cardInicio {
+  background-color: var(--color-card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 190px;
+  text-align: center;
+  padding: 18px 10px;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.28s ease;
+}
+
+.cardInicio img {
+  width: 78px;
+  height: 78px;
+  object-fit: contain;
+  margin-top: 10px;
+  transition: transform 0.25s ease;
+}
+
+.cardInicio h3 {
+  font-size: 1.1em;
+  margin: 12px 0 8px;
+  font-weight: 600;
+}
+
+.cardInicio p {
+  font-size: 0.95em;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.cardInicio:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+  border-top: 3px solid var(--color-accent);
+}
+
+.cardInicio:hover img {
+  transform: scale(1.1);
+}
+
+/* ============================
+   RESPONSIVE
+============================ */
+
+@media (max-width: 900px) {
+  .container {
+    justify-content: center;
+  }
+  .cardInicio {
+    width: 45%;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .cardInicio {
+    width: 90%;
+    max-width: 320px;
+  }
+  .inicio-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

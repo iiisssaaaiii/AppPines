@@ -6,143 +6,235 @@ import path from "path";
 
 const router = express.Router();
 
-// ⚙️ Configuración de multer para guardar imágenes en /uploads
+// Configuración de multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Carpeta donde se guardan las imágenes
+    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Nombre único
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
 const upload = multer({ storage });
 
-/**
- * 📌 POST /api/produccion/upload
- * Sube solo la imagen y devuelve la URL pública
- */
-router.post("/upload", upload.single("imagen"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No se subió ninguna imagen" });
-  }
+// POST /api/produccion/upload
+router.post("/upload", upload.single("imagen"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No se subió ninguna imagen" });
+    }
 
-  const url = `http://localhost:4000/uploads/${req.file.filename}`;
-  res.json({ url });
+    const archivo = req.file.filename;
+    const ruta = "/uploads/";
+    const nombre = req.file.originalname || archivo;
+    const mime = req.file.mimetype || null;
+    const size = req.file.size || null;
+
+    const [result] = await db.query(
+      `INSERT INTO imagenes (nombre, archivo, ruta, mime_type, tamano_bytes)
+       VALUES (?, ?, ?, ?, ?)`,
+      [nombre, archivo, ruta, mime, size]
+    );
+
+    const id_imagen = result.insertId;
+    const url = `http://localhost:4000${ruta}${archivo}`;
+
+    return res.json({ id_imagen, url });
+  } catch (error) {
+    console.error("Error subiendo imagen:", error);
+    return res.status(500).json({ error: "Error al subir la imagen" });
+  }
 });
 
-/**
- * 📌 POST /api/produccion
- * Registra la producción de pines
- * Body esperado (form-data o JSON):
- *  - imagen (archivo) o url_imagen (string)
- *  - etiquetas (texto)
- *  - tamano (texto: 'pequeno' | 'grande')
- *  - cantidad (número)
- *  - id_usuario (número)
- */
-router.post("/", upload.single("imagen"), async (req, res) => {
-  console.log("📦 Producción recibida:", req.body);
+// POST /api/produccion/procesar
+// Body: { tamano, slots: [{ id_imagen, posicion }], id_usuario }
+router.post("/procesar", async (req, res) => {
+  const { tamano, slots, id_usuario } = req.body;
 
-  const { etiquetas, tamano, cantidad, id_usuario } = req.body;
-  const url_imagen = req.file
-    ? `/uploads/${req.file.filename}`
-    : req.body.url_imagen;
+  if (!tamano || !["pequeno", "grande"].includes(tamano)) {
+    return res.status(400).json({ error: "Tamaño inválido" });
+  }
 
-  if (!url_imagen || !tamano || !cantidad) {
-    return res.status(400).json({ error: "Faltan datos obligatorios" });
+  if (!Array.isArray(slots) || slots.length === 0) {
+    return res
+      .status(400)
+      .json({ error: "No se recibieron slots de producción" });
+  }
+
+  for (const slot of slots) {
+    if (!slot.id_imagen) {
+      return res
+        .status(400)
+        .json({ error: "Todos los slots deben tener id_imagen" });
+    }
   }
 
   const connection = await db.getConnection();
-  await connection.beginTransaction();
 
   try {
-    // 1. Buscar si ya existe el pin con misma url + tamaño
-    const [existingPin] = await connection.query(
-      "SELECT id_pin FROM pines WHERE url_imagen = ? AND tamano = ?",
-      [url_imagen, tamano]
-    );
+    await connection.beginTransaction();
 
-    let pinId;
-    if (existingPin.length > 0) {
-      pinId = existingPin[0].id_pin;
-    } else {
-      const [insertPin] = await connection.query(
-        "INSERT INTO pines (url_imagen, etiquetas, tamano) VALUES (?, ?, ?)",
-        [url_imagen, etiquetas || "", tamano]
+    const cantidadPines = slots.length;
+
+    // precio por defecto según tamaño
+    const precioPorDefecto = tamano === "grande" ? 20 : 10;
+
+    // plantilla
+    const [resultPlantilla] = await connection.query(
+      `INSERT INTO plantilla (tamano, cantidad, id_usuario)
+       VALUES (?, ?, ?)`,
+      [tamano, cantidadPines, id_usuario || null]
+    );
+    const idPlantilla = resultPlantilla.insertId;
+
+    // plantilla_detalle
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      const posicion = slot.posicion ?? i;
+
+      await connection.query(
+        `INSERT INTO plantilla_detalle (id_plantilla, id_imagen, posicion)
+         VALUES (?, ?, ?)`,
+        [idPlantilla, slot.id_imagen, posicion]
       );
-      pinId = insertPin.insertId;
     }
 
-    // 2. Actualizar inventario
-    await connection.query(
-      `INSERT INTO inventario_pines (id_pin, cantidad)
-       VALUES (?, ?)
-       ON DUPLICATE KEY UPDATE cantidad = cantidad + VALUES(cantidad)`,
-      [pinId, cantidad]
-    );
+    // agrupar por imagen y asegurar pines
+    const produccionPorImagen = new Map();
+    for (const slot of slots) {
+      const actual = produccionPorImagen.get(slot.id_imagen) || 0;
+      produccionPorImagen.set(slot.id_imagen, actual + 1);
+    }
 
-    // 3. Descontar materia prima
+    const imagenToPinId = new Map();
+
+    for (const [idImagen] of produccionPorImagen.entries()) {
+      const [rowsPin] = await connection.query(
+        `SELECT id_pin, precio
+         FROM pines
+         WHERE id_imagen = ? AND tamano = ?`,
+        [idImagen, tamano]
+      );
+
+      let idPin;
+
+      if (rowsPin.length > 0) {
+        idPin = rowsPin[0].id_pin;
+
+        // si el pin ya existe pero tiene precio 0 o NULL, lo actualizamos
+        await connection.query(
+          `UPDATE pines
+           SET precio = CASE
+             WHEN precio IS NULL OR precio = 0 THEN ?
+             ELSE precio
+           END
+           WHERE id_pin = ?`,
+          [precioPorDefecto, idPin]
+        );
+      } else {
+        const [resultPin] = await connection.query(
+          `INSERT INTO pines (id_imagen, tamano, precio)
+           VALUES (?, ?, ?)`,
+          [idImagen, tamano, precioPorDefecto]
+        );
+        idPin = resultPin.insertId;
+      }
+
+      imagenToPinId.set(idImagen, idPin);
+    }
+
+    // actualizar inventario_pines + movimientos_inventario
+    const produccionPorPin = new Map();
+    for (const slot of slots) {
+      const idImagen = slot.id_imagen;
+      const idPin = imagenToPinId.get(idImagen);
+      const actual = produccionPorPin.get(idPin) || 0;
+      produccionPorPin.set(idPin, actual + 1);
+    }
+
+    const resumenPines = [];
+
+    for (const [idPin, cantidad] of produccionPorPin.entries()) {
+      const [rowsInv] = await connection.query(
+        `SELECT id_inventario, cantidad
+         FROM inventario_pines
+         WHERE id_pin = ?`,
+        [idPin]
+      );
+
+      if (rowsInv.length > 0) {
+        await connection.query(
+          `UPDATE inventario_pines
+           SET cantidad = cantidad + ?
+           WHERE id_inventario = ?`,
+          [cantidad, rowsInv[0].id_inventario]
+        );
+      } else {
+        await connection.query(
+          `INSERT INTO inventario_pines (id_pin, cantidad)
+           VALUES (?, ?)`,
+          [idPin, cantidad]
+        );
+      }
+
+      await connection.query(
+        `INSERT INTO movimientos_inventario
+         (id_pin, tipo, cantidad, motivo, id_usuario)
+         VALUES (?, 'entrada', ?, 'produccion plantilla', ?)`,
+        [idPin, cantidad, id_usuario || null]
+      );
+
+      resumenPines.push({ id_pin: idPin, cantidad_producida: cantidad });
+    }
+
+    // consumo materia prima
+    const totalPines = cantidadPines;
+
     const [consumos] = await connection.query(
-      "SELECT id_material, cantidad_por_pin FROM consumo_materia WHERE tamano = ?",
+      `SELECT id_material, cantidad_por_pin
+       FROM consumo_materia
+       WHERE tamano = ?`,
       [tamano]
     );
 
+    const resumenMateria = [];
+
     for (const consumo of consumos) {
+      const totalUso =
+        Number(consumo.cantidad_por_pin) * Number(totalPines || 0);
+
       await connection.query(
-        "UPDATE materia_prima SET cantidad = cantidad - (? * ?) WHERE id_material = ?",
-        [consumo.cantidad_por_pin, cantidad, consumo.id_material]
+        `UPDATE materia_prima
+         SET cantidad = cantidad - ?
+         WHERE id_material = ?`,
+        [totalUso, consumo.id_material]
       );
+
+      resumenMateria.push({
+        id_material: consumo.id_material,
+        cantidad_usada: totalUso,
+      });
     }
 
-    // 4. Registrar movimiento interno (en ventas)
-    await connection.query(
-      "INSERT INTO ventas (id_usuario, total) VALUES (?, ?)",
-      [id_usuario || 1, 0]
-    );
-
     await connection.commit();
-    res.json({
-      mensaje: "Producción registrada con éxito",
-      id_pin: pinId,
-      imagen: url_imagen,
+    connection.release();
+
+    return res.json({
+      ok: true,
+      mensaje: "Producción registrada correctamente",
+      id_plantilla: idPlantilla,
+      total_pines: totalPines,
+      pines_producidos: resumenPines,
+      materia_consumida: resumenMateria,
     });
   } catch (error) {
     await connection.rollback();
-    console.error("❌ Error registrando producción:", error.message);
-    res.status(500).json({ error: error.message });
-  } finally {
     connection.release();
-  }
-});
-
-  /**
- * 📌 POST /api/produccion/guardarPlantilla
- * Guarda los pines actuales en la tabla Plantilla
- */
-router.post("/guardarPlantilla", async (req, res) => {
-  console.log("📩 Solicitud recibida en /api/produccion/guardarPlantilla");
-  console.log("Body recibido:", req.body);
-
-  try {
-    const { etiquetas, tamano, cantidad, url_imagen, id_usuario } = req.body;
-
-    if (!etiquetas || !tamano || !cantidad || !url_imagen) {
-      return res.status(400).json({ error: "Faltan datos obligatorios" });
-    }
-
-    const connection = await db.getConnection();
-    const query = `
-      INSERT INTO Plantilla (etiquetas, tamano, cantidad, url_imagen, id_usuario)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    await connection.query(query, [etiquetas, tamano, cantidad, url_imagen, id_usuario]);
-    connection.release();
-
-    res.json({ mensaje: "Plantilla guardada correctamente" });
-  } catch (error) {
-    console.error("❌ Error al guardar en Plantilla:", error);
-    res.status(500).json({ error: "Error al guardar la plantilla" });
+    console.error("Error procesando producción:", error);
+    return res
+      .status(500)
+      .json({ error: "Error procesando producción", detalle: error.message });
   }
 });
 
