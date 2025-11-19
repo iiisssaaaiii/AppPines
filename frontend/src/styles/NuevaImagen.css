@@ -266,7 +266,7 @@ label {
 }
 
 /* --- MODAL CONTENT --- */
-.modal {
+.modal-tag {
   background: #fff;
   width: 540px;
   max-height: 90vh;

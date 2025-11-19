@@ -38,3 +38,17 @@ export const imprimirPines = async ({
     throw error.response?.data || { error: "Error desconocido al imprimir pines" };
   }
 };
+
+export const procesarProduccion = async ({ tamano, slots, idUsuario }) => {
+  const response = await axios.post("/api/produccion/procesar", {
+    tamano,
+    slots,
+    id_usuario: idUsuario || null, // por ahora puedes mandar null o 1 fijo
+  });
+  return response.data;
+};
+
+export const obtenerImagenesDisponibles = async () => {
+  const { data } = await axios.get("/api/imagenes");
+  return data; // arreglo de imágenes desde la API
+};

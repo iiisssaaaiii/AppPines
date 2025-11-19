@@ -1,211 +1,360 @@
-// src/pages/Inventario.jsx
 import React, { useEffect, useState } from "react";
-import { obtenerInventario } from "../services/inventarioService";
-import { actualizarPin, eliminarPin } from "../services/pinesService";
+import "../styles/Inventario.css";
+
+import {
+  obtenerInventario,
+  obtenerMateriaPrima,
+  registrarVenta,
+} from "../services/inventarioService";
+
+import { eliminarPin, actualizarPin } from "../services/pinesService";
+
 import EditPinModal from "../components/pines/EditPinModal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
+import RegistrarVentaModal from "../components/pines/RegistrarVentaModal";
 
-const Inventario = () => {
+const PLACEHOLDER_IMG =
+  "https://via.placeholder.com/120?text=Sin+Imagen";
+
+function formatearTamano(t) {
+  if (!t) return "Sin definir";
+  if (t === "pequeno") return "Pequeño";
+  if (t === "grande") return "Grande";
+  return t;
+}
+
+function evaluarEstado(stock, minimo) {
+  if (stock <= 0) return "danger";
+  if (stock <= minimo) return "warn";
+  return "ok";
+}
+
+function obtenerColorEtiqueta(tag = "") {
+  const t = tag.toLowerCase();
+
+  if (t.includes("azul") || t.includes("corporativo")) return "tag-blue";
+  if (t.includes("especial") || t.includes("limitada")) return "tag-purple";
+  return "tag-navy";
+}
+
+export default function Inventario() {
   const [pines, setPines] = useState([]);
   const [materiaPrima, setMateriaPrima] = useState([]);
-  const [filtro, setFiltro] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  // Modales
-  const [editingPin, setEditingPin] = useState(null);
-  const [deletingPin, setDeletingPin] = useState(null);
+  const [tabActiva, setTabActiva] = useState("pines");
 
-  const cargarInventario = async () => {
-    setLoading(true);
+  const [pinSeleccionado, setPinSeleccionado] = useState(null);
+  const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
+  const [mostrarConfirmEliminar, setMostrarConfirmEliminar] = useState(false);
+
+  const [mostrarVenta, setMostrarVenta] = useState(false);
+  const [pinParaVenta, setPinParaVenta] = useState(null);
+
+  const cargarDatos = async () => {
     try {
-      const data = await obtenerInventario();
-      setPines(data.inventario || []);
-      setMateriaPrima(data.materiaPrima || []);
-      //Verificar bajo stock
-      const pinesBajoStock = (data.inventario || []).filter(
-        (pin) => pin.cantidad <= (pin.stock_minimo || 5)
-      );
+      const dataPines = await obtenerInventario();
+      const dataMateria = await obtenerMateriaPrima();
 
-      if (pinesBajoStock.length > 0){
-        const nombres = pinesBajoStock
-          .map((p) => p.nombre || `Pin #${p.id_pin}`)
-          .join(", ");
-        alert(`⚠️ Los siguientes pines están bajos en stock: ${nombres}`);
-      }
+      setPines(dataPines);
+      setMateriaPrima(dataMateria);
     } catch (err) {
-      console.error("Error al obtener inventario:", err);
-      alert("No se pudo cargar el inventario");
-    } finally {
-      setLoading(false);
+      console.error("Error cargando inventario:", err);
     }
   };
 
-  useEffect(() => { cargarInventario(); }, []);
+  useEffect(() => {
+    cargarDatos();
+  }, []);
 
-  // Etiquetas únicas
-  const etiquetasDisponibles = [
-    ...new Set((pines || []).flatMap((p) => (p.etiquetas ? p.etiquetas.split(",").map(s => s.trim()).filter(Boolean) : [])))
-  ];
-
-  // Filtrar por etiqueta
-  const pinesFiltrados = filtro ? pines.filter((p) => (p.etiquetas || "").includes(filtro)) : pines;
-
-  // Guardar edición
-  const handleSaveEdit = async (data) => {
-    if (!editingPin) return;
+    const guardarCambiosPin = async (datos) => {
     try {
-      const actualizado = await actualizarPin(editingPin.id_pin, data);
-      setPines((prev) =>
-        prev.map((pin) => (pin.id_pin === editingPin.id_pin ? { ...pin, ...actualizado } : pin))
-      );
-      setEditingPin(null);
-    } catch (err) {
-      console.error(err);
-      alert("No se pudo actualizar el pin");
+      // datos viene de EditPinModal: { tamano, precio, cantidad }
+      await actualizarPin(pinSeleccionado.id_pin, datos);
+      setMostrarModalEditar(false);
+      setPinSeleccionado(null);
+      await cargarDatos();
+    } catch (error) {
+      console.error("Error actualizando pin:", error);
+      alert("❌ No se pudieron guardar los cambios del pin");
     }
   };
 
-  // Confirmar eliminación
-  const handleConfirmDelete = async () => {
-    if (!deletingPin) return;
+  const eliminarPinSeleccionado = async () => {
     try {
-      await eliminarPin(deletingPin.id_pin);
-      setPines((prev) => prev.filter((p) => p.id_pin !== deletingPin.id_pin));
-      setDeletingPin(null);
-    } catch (err) {
-      console.error(err);
-      alert("No se pudo eliminar el pin");
+      await eliminarPin(pinSeleccionado.id_pin);
+      setMostrarConfirmEliminar(false);
+      setPinSeleccionado(null);
+      await cargarDatos();
+    } catch (error) {
+      console.error("Error eliminando pin:", error);
+      const mensaje =
+        error?.response?.data?.error ||
+        "No se pudo eliminar el pin. Intenta de nuevo más tarde.";
+      alert(`❌ ${mensaje}`);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="inventario-page">
-        <div className="skeleton-card">Cargando inventario…</div>
-      </div>
-    );
-  }
 
   return (
-    <div className="inventario-page">
-      {/* Encabezado + filtro */}
-      <div className="inventario-header">
-        <h1 className="section-title">📦 STOCK DE PINES</h1>
+    <main className="page inventario-page">
+      <h1 className="page-title">INVENTARIO</h1>
 
-        <div className="filter-bar">
-          <label className="filter-label">Filtrar por etiqueta</label>
-          <div className="pretty-select">
-            <select value={filtro} onChange={(e) => setFiltro(e.target.value)}>
-              <option value="">-- Todas --</option>
-              {etiquetasDisponibles.map((et, i) => (
-                <option key={i} value={et}>{et}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+      <div className="app">
+        <nav className="tabs">
+          <button
+            className={`tab-btn ${tabActiva === "pines" ? "active" : ""}`}
+            onClick={() => setTabActiva("pines")}
+          >
+            Stock de pines
+          </button>
+          <button
+            className={`tab-btn ${tabActiva === "materia" ? "active" : ""}`}
+            onClick={() => setTabActiva("materia")}
+          >
+            Materia prima
+          </button>
+        </nav>
 
-      {/* Grid de Pines */}
-      <div className="inventario-grid">
-        {pinesFiltrados?.length ? (
-          pinesFiltrados.map((pin) => (
-            <div key={pin.id_pin} className="inventario-panel">
-              {pin.cantidad <= (pin.stock_minimo||5) && (
-                <div className="alerta-stock-bajo">
-                  ⚠️ Bajo stock: solo {pin.cantidad} unidades
-                </div>
-              )}
-              
-              <div className="pin-image">
-                <img
-                  src={pin.url_imagen}
-                  alt={pin.etiquetas || "pin"}
-                />
-              </div>
+        {/* TAB PINES */}
+        <section
+          className={`tab-panel ${tabActiva === "pines" ? "active" : ""}`}
+        >
+          <div className="panel-header">
+            <div>
+              <h2>Inventario de pines disponibles</h2>
+              <p>Listado de pines terminados listos para venta o entrega.</p>
+            </div>
 
-              <div className="pin-info">
-                <p><strong>Nombre:</strong> {pin.nombre || `Pin #${pin.id_pin}`}</p>
-                <p><strong>Cantidad:</strong> {pin.cantidad}</p>
-                <p><strong>Etiquetas:</strong> {pin.etiquetas || "Sin etiquetas"}</p>
-                <p><strong>Tamaño:</strong> {pin.tamano}</p>
-                <p><strong>Tiempo en stock:</strong>{" "}
-                  {typeof pin.tiempo_en_stock !== "undefined" ? `${pin.tiempo_en_stock} días` : "Sin datos"}
-                </p>
-              </div>
-
-              {/* Acciones — solo en Stock de pines */}
-              <div className="pin-actions">
-                <button
-                  className="btn btn-primary btn-full"
-                  onClick={() => setEditingPin(pin)}
-                >
-                  Modificar
-                </button>
-                <button
-                  className="btn btn-danger btn-full"
-                  onClick={() => setDeletingPin(pin)}
-                >
-                  Eliminar
-                </button>
+            <div className="filter">
+              <span>Filtrar por etiqueta</span>
+              <div className="fake-select">
+                <span className="value">-- Todas --</span>
+                <span className="caret">▾</span>
               </div>
             </div>
-          ))
-        ) : (
-          <div className="empty-state">No hay pines en inventario</div>
-        )}
-      </div>
+          </div>
 
-      {/* Materia prima */}
-      <div className="materia-card">
-        <h2 className="section-subtitle">📦 STOCK DE MATERIA PRIMA</h2>
-        <div className="table-wrapper">
-          <table className="materia-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Material</th>
-                <th>Cantidad</th>
-                <th>Stock mínimo</th>
-                <th>Unidad</th>
-              </tr>
-            </thead>
-            <tbody>
-              {materiaPrima.map((mat) => (
-                <tr key={mat.id_material}>
-                  <td>{mat.id_material}</td>
-                  <td>{mat.nombre}</td>
-                  <td>{mat.cantidad}</td>
-                  <td>{mat.stock_minimo}</td>
-                  <td>{mat.unidad}</td>
+          <div className="pin-layout">
+            {pines.map((pin) => {
+              const estado = evaluarEstado(pin.stock_actual, 5); // umbral 5 pzs
+              const badgeClass =
+                estado === "ok"
+                  ? "badge badge-ok"
+                  : estado === "warn"
+                  ? "badge badge-warn"
+                  : "badge badge-danger";
+
+              return (
+                <article key={pin.id_pin} className="pin-card">
+                  <div className="pin-image-wrap">
+                    <img
+                      src={pin.url_imagen || PLACEHOLDER_IMG}
+                      alt={pin.nombre_pin}
+                      className="pin-image"
+                    />
+                  </div>
+
+                  <div className="pin-header-row">
+                    <div>
+                      <h3 className="pin-name">{pin.nombre_pin}</h3>
+
+                      <div className="pin-tags">
+                        {pin.etiquetas &&
+                          pin.etiquetas
+                            .split(",")
+                            .filter((t) => t.trim() !== "")
+                            .map((tag, i) => (
+                              <span
+                                key={i}
+                                className={`tag-chip ${obtenerColorEtiqueta(
+                                  tag
+                                )}`}
+                              >
+                                {tag.trim()}
+                              </span>
+                            ))}
+                      </div>
+                    </div>
+
+                    <span className={badgeClass}>
+                      {estado === "ok"
+                        ? "Stock saludable"
+                        : estado === "warn"
+                        ? "Stock bajo"
+                        : "Agotado"}
+                    </span>
+                  </div>
+
+                  <ul className="pin-meta">
+                    <li>
+                      <span className="label">Stock:</span>{" "}
+                      {pin.stock_actual} piezas
+                    </li>
+                    <li>
+                      <span className="label">Tamaño:</span>{" "}
+                      {formatearTamano(pin.tamano ?? pin.tamaño)}
+                    </li>
+                    <li>
+                      <span className="label">Precio:</span>{" "}
+                      $
+                      {pin.precio != null
+                        ? Number(pin.precio).toFixed(2)
+                        : "0.00"}
+                    </li>
+                    <li>
+                      <span className="label">Tiempo en stock:</span>{" "}
+                      {pin.tiempo_en_stock != null
+                        ? `${pin.tiempo_en_stock} días`
+                        : "—"}
+                    </li>
+                  </ul>
+
+                  <div className="pin-actions">
+                    <button
+                      className="btn btn-sale"
+                      onClick={() => {
+                        setPinParaVenta(pin);
+                        setMostrarVenta(true);
+                      }}
+                    >
+                      Registrar venta
+                    </button>
+
+                    <button
+                      className="btn btn-edit"
+                      onClick={() => {
+                        setPinSeleccionado(pin);
+                        setMostrarModalEditar(true);
+                      }}
+                    >
+                      Modificar
+                    </button>
+
+                    {/* <button
+                      className="btn btn-delete"
+                      onClick={() => {
+                        setPinSeleccionado(pin);
+                        setMostrarConfirmEliminar(true);
+                      }}
+                    >
+                      Eliminar
+                    </button> */}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* TAB MATERIA PRIMA */}
+        <section
+          className={`tab-panel ${tabActiva === "materia" ? "active" : ""}`}
+        >
+          <div className="panel-header">
+            <div>
+              <h2>Inventario de materia prima</h2>
+              <p>Material base para producir nuevos pines.</p>
+            </div>
+
+            <button className="btn-add">➕ Agregar</button>
+          </div>
+
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Material</th>
+                  <th>Descripción</th>
+                  <th className="numeric">Stock</th>
+                  <th>Unidad</th>
+                  <th>Estado</th>
+                  <th style={{ textAlign: "center" }}>Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {materiaPrima.map((mat) => {
+                  const estado = evaluarEstado(
+                    mat.stock_actual,
+                    mat.stock_minimo
+                  );
+
+                  const badgeClass =
+                    estado === "ok"
+                      ? "badge badge-ok"
+                      : estado === "warn"
+                      ? "badge badge-warn"
+                      : "badge badge-danger";
+
+                  return (
+                    <tr key={mat.id_materia_prima}>
+                      <td>{mat.id_materia_prima}</td>
+                      <td>{mat.nombre}</td>
+                      <td>{mat.descripcion}</td>
+                      <td className="numeric">{mat.stock_actual}</td>
+                      <td>{mat.unidad}</td>
+                      <td>
+                        <span className={badgeClass}>
+                          {estado === "ok"
+                            ? "OK"
+                            : estado === "warn"
+                            ? "Revisar pronto"
+                            : "Sin existencias"}
+                        </span>
+                      </td>
+
+                      <td className="actions-cell">
+                        <div className="icon-actions">
+                          <button className="icon-btn">✏️</button>
+                          <button className="icon-btn">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
-      {/* Modal Editar */}
-      <EditPinModal
-        open={!!editingPin}
-        pin={editingPin}
-        onClose={() => setEditingPin(null)}
-        onSave={handleSaveEdit}
-      />
+      {mostrarModalEditar && (
+        <EditPinModal
+          open={mostrarModalEditar}
+          pin={pinSeleccionado}
+          onClose={() => {
+            setMostrarModalEditar(false);
+            setPinSeleccionado(null);
+          }}
+          onSave={guardarCambiosPin}
+        />
+      )}
 
-      {/* Confirmación Eliminar */}
-      <ConfirmDialog
-        open={!!deletingPin}
-        title="Eliminar pin"
-        message={
-          deletingPin
-            ? `¿Seguro que quieres eliminar el pin ${deletingPin.nombre || `#${deletingPin.id_pin}`}? Esta acción no se puede deshacer.`
-            : ""
-        }
-        onCancel={() => setDeletingPin(null)}
-        onConfirm={handleConfirmDelete}
-      />
-    </div>
+      {mostrarConfirmEliminar && (
+        <ConfirmDialog
+          title="Eliminar pin"
+          message="¿Estás seguro de que deseas eliminar este pin?"
+          onConfirm={eliminarPinSeleccionado}
+          onCancel={() => setMostrarConfirmEliminar(false)}
+        />
+      )}
+
+      {mostrarVenta && (
+        <RegistrarVentaModal
+          pin={pinParaVenta}
+          onClose={() => setMostrarVenta(false)}
+          onConfirm={async ({ cantidad, descripcion }) => {
+            await registrarVenta({
+              id_pin: pinParaVenta.id_pin,
+              cantidad,
+              descripcion,
+            });
+
+            setMostrarVenta(false);
+            cargarDatos();
+          }}
+        />
+      )}
+    </main>
   );
-};
-
-export default Inventario;
+}

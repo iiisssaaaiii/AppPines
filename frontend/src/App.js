@@ -1,7 +1,6 @@
 // src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import "./App.css";
 
 // Páginas
 import Inicio from "./pages/Inicio";
@@ -31,7 +30,6 @@ function AppContent() {
       <main className={isInicio ? "App-main inicio-main" : "App-main"}>
         <Routes>
           <Route path="/" element={<Inicio />} />
-          <Route path="/inventario" element={<Inventario />} />
           <Route path="/gestion-imagenes" element={<GestionImagenes />} />
           <Route path="/editar-imagen/:id" element={<EditarImagen />} />
           <Route path="/nueva-imagen" element={<NuevaImagen />} />

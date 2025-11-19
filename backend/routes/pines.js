@@ -1,224 +1,147 @@
+// backend/routes/pines.js
 import express from "express";
 import db from "../config/db.js";
 
 const router = express.Router();
 
-/**
- * ✅ POST /api/pines
- * Crea un nuevo pin y su inventario inicial.
- * Body esperado: { url_imagen, etiquetas?, tamano, cantidad, fecha_creacion?, nombre? }
- */
-router.post("/", async (req, res) => {
+/* ============================================================
+   PUT /api/pines/:id
+   Actualiza tamaño, precio y stock del pin
+   Body esperado: { tamano, precio, cantidad }
+============================================================ */
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { tamano, precio, cantidad } = req.body;
+
+  if (!tamano && precio == null && cantidad == null) {
+    return res
+      .status(400)
+      .json({ error: "No se recibió ningún campo para actualizar" });
+  }
+
+  const connection = await db.getConnection();
   try {
-    const { url_imagen, etiquetas, tamano, cantidad, fecha_creacion, nombre } = req.body;
+    await connection.beginTransaction();
 
-    if (!url_imagen || !tamano || typeof cantidad === "undefined") {
-      return res.status(400).json({ error: "Faltan datos obligatorios (url_imagen, tamano, cantidad)" });
+    // 1️⃣ Verificar que el pin exista
+    const [pinRows] = await connection.query(
+      "SELECT id_pin FROM pines WHERE id_pin = ?",
+      [id]
+    );
+    if (pinRows.length === 0) {
+      await connection.rollback();
+      connection.release();
+      return res.status(404).json({ error: "Pin no encontrado" });
     }
 
-    // Validar tamaño (opcional)
-    const TAMANOS = new Set(["pequeno", "grande"]);
-    if (!TAMANOS.has(tamano)) {
-      return res.status(400).json({ error: "Tamaño inválido (usa 'pequeno' o 'grande')" });
+    // 2️⃣ Actualizar tabla pines (tamaño y/o precio)
+    const camposPines = [];
+    const valoresPines = [];
+
+    if (tamano) {
+      camposPines.push("tamano = ?");
+      valoresPines.push(tamano); // "pequeno" | "grande"
+    }
+    if (precio != null) {
+      camposPines.push("precio = ?");
+      valoresPines.push(precio);
     }
 
-    const conn = await db.getConnection();
-    try {
-      await conn.beginTransaction();
+    if (camposPines.length > 0) {
+      valoresPines.push(id);
+      const sqlUpdatePines = `
+        UPDATE pines
+        SET ${camposPines.join(", ")}
+        WHERE id_pin = ?
+      `;
+      await connection.query(sqlUpdatePines, valoresPines);
+    }
 
-      // Crear el pin en la tabla pines
-      const [result] = await conn.query(
-        "INSERT INTO pines (nombre, url_imagen, etiquetas, tamano, fecha_creacion) VALUES (?, ?, ?, ?, ?)",
-        [nombre || null, url_imagen, etiquetas || "", tamano, fecha_creacion || new Date()]
+    // 3️⃣ Actualizar stock en inventario_pines
+    if (cantidad != null) {
+      const [invRows] = await connection.query(
+        "SELECT id_inventario FROM inventario_pines WHERE id_pin = ?",
+        [id]
       );
 
-      // Crear inventario
-      await conn.query(
-        "INSERT INTO inventario_pines (id_pin, cantidad) VALUES (?, ?)",
-        [result.insertId, Number(cantidad) || 0]
-      );
-
-      // Asociar etiquetas al pin (si existen)
-      for (let tag of etiquetas) {
-        // Verificar si la etiqueta ya existe
-        const [tagResult] = await conn.query('SELECT id_tag FROM tags WHERE nombre = ?', [tag]);
-
-        if (tagResult.length > 0) {
-          // Si la etiqueta existe, asociarla
-          await conn.query('INSERT INTO pin_tags (id_pin, id_tag) VALUES (?, ?)', [result.insertId, tagResult[0].id_tag]);
-        } else {
-          // Si la etiqueta no existe, crearla y asociarla
-          const [newTagResult] = await conn.query('INSERT INTO tags (nombre) VALUES (?)', [tag]);
-          await conn.query('INSERT INTO pin_tags (id_pin, id_tag) VALUES (?, ?)', [result.insertId, newTagResult.insertId]);
-        }
+      if (invRows.length > 0) {
+        await connection.query(
+          "UPDATE inventario_pines SET cantidad = ? WHERE id_pin = ?",
+          [cantidad, id]
+        );
+      } else {
+        await connection.query(
+          "INSERT INTO inventario_pines (id_pin, cantidad) VALUES (?, ?)",
+          [id, cantidad]
+        );
       }
 
-      await conn.commit();
-
-      res.json({ mensaje: "Pin creado con éxito", id_pin: result.insertId });
-    } catch (err) {
-      await conn.rollback();
-      console.error("❌ Error en transacción POST /pines:", err.message);
-      res.status(500).json({ error: "Error creando pin" });
-    } finally {
-      conn.release();
+      // 4️⃣ Registrar movimiento de ajuste de inventario
+      await connection.query(
+        `INSERT INTO movimientos_inventario
+         (id_pin, tipo, cantidad, motivo, id_usuario)
+         VALUES (?, 'ajuste', ?, ?, ?)`,
+        [id, cantidad, "ajuste desde inventario", 1] // id_usuario fijo por ahora
+      );
     }
+
+    await connection.commit();
+    connection.release();
+
+    return res.json({
+      ok: true,
+      mensaje: "Pin actualizado correctamente",
+    });
   } catch (error) {
-    console.error("❌ Error en POST /pines:", error.message);
-    res.status(500).json({ error: "Error creando pin" });
+    await connection.rollback();
+    connection.release();
+    console.error("❌ Error actualizando pin:", error);
+    return res.status(500).json({ error: "Error actualizando pin" });
   }
 });
 
-/**
- * ✅ PUT /api/pines/:id
- * Edita un pin existente. Campos opcionales:
- * { nombre?, etiquetas?, tamano?, url_imagen?, cantidad? }
- * - Si viene 'cantidad', actualiza/crea su inventario.
- */
-router.put("/:id", async (req, res) => {
+/* ============================================================
+   DELETE /api/pines/:id
+   Elimina el pin y su inventario (ON DELETE CASCADE)
+============================================================ */
+router.delete("/:id", async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "ID inválido" });
   }
 
-  const { nombre, etiquetas, tamano, url_imagen, cantidad } = req.body;
+  const connection = await db.getConnection();
 
-  // Validar tamaño si vino
-  if (typeof tamano !== "undefined") {
-    const TAMANOS = new Set(["pequeno", "grande"]);
-    if (!TAMANOS.has(tamano)) {
-      return res.status(400).json({ error: "Tamaño inválido (usa 'pequeno' o 'grande')" });
-    }
-  }
-
-  const conn = await db.getConnection();
   try {
-    await conn.beginTransaction();
+    await connection.beginTransaction();
 
-    // Construcción dinámica del UPDATE pines
-    const fields = [];
-    const values = [];
-    if (typeof nombre !== "undefined") { fields.push("nombre = ?"); values.push(nombre || null); }
-    if (typeof etiquetas !== "undefined") { fields.push("etiquetas = ?"); values.push(etiquetas || ""); }
-    if (typeof tamano !== "undefined") { fields.push("tamano = ?"); values.push(tamano); }
-    if (typeof url_imagen !== "undefined") { fields.push("url_imagen = ?"); values.push(url_imagen); }
-
-    if (fields.length) {
-      const sql = `UPDATE pines SET ${fields.join(", ")} WHERE id_pin = ?`;
-      values.push(id);
-      const [up] = await conn.query(sql, values);
-      if (up.affectedRows === 0) {
-        await conn.rollback();
-        return res.status(404).json({ error: "Pin no encontrado" });
-      }
-    } else {
-      // Si no vino ningún campo de pines, igual validaremos existencia si se va a tocar inventario
-      const [exists] = await conn.query("SELECT id_pin FROM pines WHERE id_pin = ?", [id]);
-      if (!exists.length) {
-        await conn.rollback();
-        return res.status(404).json({ error: "Pin no encontrado" });
-      }
-    }
-
-    // Actualizar inventario si vino 'cantidad'
-    if (typeof cantidad !== "undefined") {
-      const [existInv] = await conn.query(
-        "SELECT id_inventario FROM inventario_pines WHERE id_pin = ?",
-        [id]
-      );
-      if (existInv.length) {
-        await conn.query(
-          "UPDATE inventario_pines SET cantidad = ? WHERE id_pin = ?",
-          [Number(cantidad) || 0, id]
-        );
-      } else {
-        await conn.query(
-          "INSERT INTO inventario_pines (id_pin, cantidad) VALUES (?, ?)",
-          [id, Number(cantidad) || 0]
-        );
-      }
-    }
-
-    // Asociar las etiquetas actualizadas al pin
-    if (etiquetas) {
-      // Borrar las etiquetas existentes
-      await conn.query("DELETE FROM pin_tags WHERE id_pin = ?", [id]);
-
-      // Asociar las nuevas etiquetas
-      for (let tag of etiquetas) {
-        const [tagResult] = await conn.query('SELECT id_tag FROM tags WHERE nombre = ?', [tag]);
-
-        if (tagResult.length > 0) {
-          // Si la etiqueta existe, asociarla
-          await conn.query('INSERT INTO pin_tags (id_pin, id_tag) VALUES (?, ?)', [id, tagResult[0].id_tag]);
-        } else {
-          // Si la etiqueta no existe, crearla y asociarla
-          const [newTagResult] = await conn.query('INSERT INTO tags (nombre) VALUES (?)', [tag]);
-          await conn.query('INSERT INTO pin_tags (id_pin, id_tag) VALUES (?, ?)', [id, newTagResult.insertId]);
-        }
-      }
-    }
-
-    await conn.commit();
-
-    // Devolver el pin actualizado
-    const [rows] = await db.query(
-      `SELECT 
-         p.id_pin,
-         p.nombre,
-         p.url_imagen,
-         p.etiquetas,
-         p.tamano,
-         IFNULL(i.cantidad, 0) AS cantidad,
-         p.fecha_creacion,
-         DATEDIFF(CURDATE(), DATE(p.fecha_creacion)) AS tiempo_en_stock
-       FROM pines p
-       LEFT JOIN inventario_pines i ON i.id_pin = p.id_pin
-       WHERE p.id_pin = ?`,
+    // 1️⃣ Borrar detalle de ventas de ese pin (si hay)
+    await connection.query(
+      "DELETE FROM venta_detalle WHERE id_pin = ?",
       [id]
     );
 
-    res.json(rows[0] || { mensaje: "Actualizado" });
-  } catch (err) {
-    await conn.rollback();
-    console.error("❌ Error PUT /pines/:id:", err.message);
-    res.status(500).json({ error: "No se pudo actualizar el pin" });
-  } finally {
-    conn.release();
-  }
-});
-
-/**
- * ✅ GET /api/pines/:id/tags
- * Obtiene las etiquetas asociadas a un pin.
- * Devuelve un array de etiquetas (nombre).
- */
-router.get("/:id/tags", async (req, res) => {
-  const id_pin = parseInt(req.params.id, 10);
-  
-  if (Number.isNaN(id_pin)) {
-    return res.status(400).json({ error: "ID de pin inválido" });
-  }
-
-  try {
-    // Obtener las etiquetas asociadas al pin usando JOIN entre pin_tags y tags
-    const [tags] = await db.query(
-      `SELECT t.nombre 
-       FROM tags t 
-       JOIN pin_tags pt ON t.id_tag = pt.id_tag 
-       WHERE pt.id_pin = ?`,
-      [id_pin]
+    // 2️⃣ Borrar el pin
+    const [result] = await connection.query(
+      "DELETE FROM pines WHERE id_pin = ?",
+      [id]
     );
 
-    if (tags.length === 0) {
-      return res.status(404).json({ error: "No se encontraron etiquetas para este pin" });
+    if (result.affectedRows === 0) {
+      await connection.rollback();
+      connection.release();
+      return res.status(404).json({ error: "Pin no encontrado" });
     }
 
-    // Devuelve las etiquetas encontradas
-    res.json(tags);
+    await connection.commit();
+    connection.release();
+
+    return res.json({ ok: true, mensaje: "Pin eliminado correctamente" });
   } catch (error) {
-    console.error("❌ Error GET /pines/:id/tags:", error.message);
-    res.status(500).json({ error: "Error obteniendo etiquetas del pin" });
+    await connection.rollback();
+    connection.release();
+    console.error("❌ Error DELETE /pines/:id:", error);
+    return res.status(500).json({ error: "Error eliminando pin" });
   }
 });
 
