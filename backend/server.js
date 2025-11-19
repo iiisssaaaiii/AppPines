@@ -5,11 +5,13 @@ import inventarioRoutes from "./routes/inventario.js";
 import produccionRoutes from "./routes/produccion.js";
 import pinesRoutes from "./routes/pines.js";
 import catalogoRoutes from "./routes/catalogo.js";
+
 // import ventasRoutes from "./routes/ventas.js";  // Importa las rutas de ventas
 
 // ⭐ NUEVA RUTA PARA IMÁGENES
 import imagenesRoutes from "./routes/imagenes.js";
 
+import plantillaRoutes from "./routes/plantillas.js";
 import path from "path";
 import fs from "fs";
 import cors from "cors";
@@ -60,6 +62,7 @@ app.use("/api/inventario", inventarioRoutes);
 app.use("/api/produccion", produccionRoutes);
 app.use("/api/pines", pinesRoutes);
 app.use("/api/catalogo", catalogoRoutes);
+app.use("/api/plantilla", plantillaRoutes);
 
 // ⭐ Activar rutas de gestión de imágenes
 app.use("/api/imagenes", imagenesRoutes);
