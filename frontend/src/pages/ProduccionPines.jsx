@@ -221,11 +221,47 @@ const ProduccionPines = () => {
     }
   };
 
-  const handleGuardarPlantilla = async () => {
-    const produccionData = await procesarProduccionBackend();
-    if (!produccionData) return;
-    alert("✅ Plantilla guardada y producción registrada correctamente.");
+const handleGuardarPlantilla = async () => {
+  const cantidad = pines.filter(p => p !== null).length;
+
+  if (cantidad === 0) {
+    alert("❌ Debes colocar al menos una imagen");
+    return;
+  }
+
+  // construir slots para backend
+  const slots = [];
+  pines.forEach((pinUrl, index) => {
+    if (pinUrl) {
+      slots.push({
+        id_imagen: imagenesMap[pinUrl],
+        posicion: index,
+      });
+    }
+  });
+
+  const body = {
+    tamano,
+    cantidad,
+    slots,
   };
+
+  const res = await fetch("http://localhost:4000/api/plantilla", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json();
+
+  if (data.ok) {
+    alert("✅ Plantilla guardada correctamente");
+  } else {
+    alert("❌ Error al guardar la plantilla");
+  }
+};
+
+
 
   const changeTamano = (newTamano) => {
     setTamano(newTamano);
