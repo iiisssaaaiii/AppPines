@@ -315,6 +315,14 @@ body[data-theme="dark"] .inventario-page {
   transition: filter 0.16s ease, transform 0.08s ease;
 }
 
+.btn-blue {
+  background-color: var(--btn-red);
+}
+
+.btn-green {
+  background-color: var(--btn-blue);
+}
+
 .inventario-page .btn-sale {
   background: var(--btn-green);
 }

@@ -178,6 +178,48 @@ const Catalogo = () => {
           </div>
         </div>
       )}
+
+      {showTemplate && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Vista de Plantilla</h2>
+
+            {pinSeleccionado && (
+              <>
+                <p>
+                  <strong>Etiqueta:</strong> {pinSeleccionado.etiquetas}
+                </p>
+                <p>
+                  <strong>Tamaño:</strong> {pinSeleccionado.tamano}
+                </p>
+                <p>
+                  <strong>Cantidad:</strong> {pinSeleccionado.cantidad}
+                </p>
+
+                <div className="grid-plantilla">
+                  {pinSeleccionado.pines.map((url, i)=> (
+                    <img
+                      key={i}
+                      src={url}
+                      alt={`pin-${i}`}
+                      className="pin-mini"
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            <button className="btn-generar" onClick={generarPDF}>
+              Descargar PDF
+            </button>
+            <button
+              className="btn-cerrar"
+              onClick={() => setShowTemplate(false)}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
