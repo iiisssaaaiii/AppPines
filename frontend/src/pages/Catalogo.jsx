@@ -3,68 +3,74 @@
 import React, { useEffect, useState } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import "../styles/CatalogoGrid.css";
 
 const Catalogo = () => {
-  const [pines, setPines] = useState([]);
+  const [plantillas, setPlantillas] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   const [showTemplate, setShowTemplate] = useState(false);
-  const [pinSeleccionado, setPinSeleccionado] = useState(null);
+  const [plantillaSeleccionada, setPlantillaSeleccionada] = useState(null);
 
-  const generarPDF = async () => {
-    if (!pinSeleccionado) return;
-
-    const element = document.querySelector(".grid-plantilla");
-
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "pt",
-      format: "letter",
-    });
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 20;
-    const imgWidth = pageWidth - margin * 2;
-
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", margin, margin, imgWidth, imgHeight);
-    pdf.save(`plantilla_${pinSeleccionado.id}.pdf`);
-  };
-
-  const abrirPlantilla = async (pin) => {
-  try {
-    const res = await fetch(`http://localhost:4000/api/plantilla/${pin.id}`);
-    const data = await res.json();
-
-    setPinSeleccionado(data);
-    setShowTemplate(true);
-  } catch (error) {
-    console.error("Error cargando plantilla:", error);
-  }
-};
-
-
+  /* =====================================================
+     🔵 Cargar listado de plantillas
+     ===================================================== */
   useEffect(() => {
-    fetch("http://localhost:4000/api/catalogo")
+    fetch("http://localhost:4000/api/plantilla")
       .then((res) => res.json())
       .then((data) => {
-        setPines(data);
+        setPlantillas(data);
         setCargando(false);
       })
       .catch((err) => {
-        console.error("Error al cargar el catálogo:", err);
+        console.error("Error al cargar plantillas:", err);
         setCargando(false);
       });
   }, []);
 
+  /* =====================================================
+     🔵 Abrir plantilla completa
+     ===================================================== */
+  const abrirPlantilla = async (item) => {
+    try {
+      const res = await fetch(`http://localhost:4000/api/plantilla/${item.id}`);
+      const data = await res.json();
+
+      setPlantillaSeleccionada(data);
+      setShowTemplate(true);
+    } catch (error) {
+      console.error("Error cargando plantilla:", error);
+    }
+  };
+
+  /* =====================================================
+     🔵 Generar PDF
+     ===================================================== */
+  const generarPDF = async () => {
+    if (!plantillaSeleccionada) return;
+
+    const element = document.querySelector(".hoja-plantilla");
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("landscape", "pt", "letter");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+    pdf.save(`plantilla_${plantillaSeleccionada.id}.pdf`);
+  };
+
+  /* =====================================================
+     🔵 Pantalla de carga
+     ===================================================== */
   if (cargando) {
     return <div className="page-container">Cargando catálogo...</div>;
   }
@@ -73,52 +79,103 @@ const Catalogo = () => {
     <div className="page-container">
       <h1 className="section-title">📔 Catálogo de Pines</h1>
 
-      {pines.length === 0 ? (
+      {plantillas.length === 0 ? (
         <p className="empty-state">No hay plantillas guardadas todavía.</p>
       ) : (
-        <div className="table-wrapper">
-          <table className="catalogo-table">
-            <thead>
-              <tr>
-                <th>Imagen</th>
-                <th>Etiqueta</th>
-                <th>Tamaño</th>
-                <th>Cantidad</th>
-                <th>Fecha guardado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pines.map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    <img
-                      src={p.url_imagen}
-                      alt={p.etiquetas}
-                      className="pin-preview"
-                    />
-                  </td>
-                  <td>{p.etiquetas}</td>
-                  <td>{p.tamano}</td>
-                  <td>{p.cantidad}</td>
-                  <td>
-                    {new Date(p.fecha_guardado).toLocaleString("es-MX", {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
-                  </td>
-                  <td>
-                    <button
-                      className="btn-ver"
-                      onClick={() => abrirPlantilla(p)}
-                    >
-                      Ver Plantilla
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid-catalogo">
+          {plantillas.map((p) => (
+            <div key={p.id} className="card-plantilla">
+
+              {/* 🖼️ Miniatura circular */}
+              <img
+                src={
+                  p.miniatura
+                    ? `http://localhost:4000${p.miniatura}`
+                    : "https://via.placeholder.com/200?text=Sin+imagen"
+                }
+                alt={`plantilla-${p.id}`}
+                className="miniatura-pin"
+              />
+
+              <div className="info-plantilla">
+
+                <p className="dato-plantilla">
+                  <strong>Tamaño:</strong> {p.tamano}
+                </p>
+
+                <p className="dato-plantilla">
+                  <strong>Cantidad:</strong> {p.cantidad}
+                </p>
+
+                <p className="dato-plantilla">
+                  <strong>Guardado:</strong>{" "}
+                  {new Date(p.fecha_guardado).toLocaleString("es-MX", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })}
+                </p>
+
+                <button
+                  className="btn-ver-plantilla"
+                  onClick={() => abrirPlantilla(p)}
+                >
+                  Ver Plantilla
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* =====================================================
+         🔵 MODAL → Vista completa horizontal
+         ===================================================== */}
+      {showTemplate && plantillaSeleccionada && (
+        <div className="overlay-modal">
+          <div className="contenido-modal">
+
+            <h2>Vista de Plantilla</h2>
+
+            <p>
+              <strong>Tamaño:</strong> {plantillaSeleccionada.tamano}
+            </p>
+
+            <p>
+              <strong>Cantidad:</strong> {plantillaSeleccionada.cantidad}
+            </p>
+
+            {/* 🌟 HOJA HORIZONTAL */}
+            <div className="hoja-plantilla">
+              <div
+                className={
+                  plantillaSeleccionada.tamano === "pequeno"
+                    ? "grid-pines-chicos"
+                    : "grid-pines-grandes"
+                }
+              >
+                {plantillaSeleccionada.pines.map((p, i) => (
+                  <img
+                    key={i}
+                    src={`http://localhost:4000${p.url}`}
+                    alt={`pin-${i}`}
+                    className="pin-circular"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <button className="btn-descargar-pdf" onClick={generarPDF}>
+              Descargar PDF
+            </button>
+
+            <button
+              className="btn-cerrar-modal"
+              onClick={() => setShowTemplate(false)}
+            >
+              Cerrar
+            </button>
+
+          </div>
         </div>
       )}
 
